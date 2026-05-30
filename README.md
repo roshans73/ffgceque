@@ -53,7 +53,7 @@ C:\000_CEQUE_TLC\
             └── types\        TypeScript interfaces
 ```
 
-**Backend stack:** .NET 8 · ASP.NET Core · EF Core 8 · SQLite · Azure AD (Microsoft.Identity.Web)
+**Backend stack:** .NET 10 · ASP.NET Core · EF Core 10 · SQLite · Azure AD (Microsoft.Identity.Web)
 
 **Frontend stack:** React 19 · TypeScript · Vite 8 · Material UI v9 · React Router v7 · Axios · Dexie (IndexedDB) · Recharts
 
@@ -65,25 +65,25 @@ C:\000_CEQUE_TLC\
 
 | Tool                      | Version     | Install                                                       |
 | ------------------------- | ----------- | ------------------------------------------------------------- |
-| .NET SDK                  | 8.x         | https://dotnet.microsoft.com/download/dotnet/8.0              |
+| .NET SDK                  | 10.x        | https://dotnet.microsoft.com/download/dotnet/10.0             |
 | Node.js                   | 18 or later | https://nodejs.org                                            |
-| dotnet-ef CLI             | 8.0.4       | `dotnet tool install --global dotnet-ef --version 8.0.4`      |
+| dotnet-ef CLI             | 10.0.0      | `dotnet tool install --global dotnet-ef --version 10.0.0`     |
 | Azure CLI _(deploy only)_ | latest      | https://learn.microsoft.com/en-us/cli/azure/install-azure-cli |
 
 Verify:
 
 ```bash
-dotnet --version          # 8.x.x
+dotnet --version          # 10.x.x
 node --version            # v18 or later
 npm --version             # 9.x or later
-dotnet ef --version       # 8.0.4
+dotnet ef --version       # 10.0.0
 ```
 
 ---
 
 ## Running Locally
 
-### Backend (.NET 8 API)
+### Backend (.NET 10 API)
 
 #### 1. Configure Azure AD (or skip for local dev)
 
@@ -231,7 +231,7 @@ You will need two Azure resources:
 
 | Resource                              | Purpose                  | Free tier?             |
 | ------------------------------------- | ------------------------ | ---------------------- |
-| **Azure App Service** (Linux, .NET 8) | Hosts the backend API    | F1 free tier (limited) |
+| **Azure App Service** (Linux, .NET 10) | Hosts the backend API    | F1 free tier (limited) |
 | **Azure Static Web Apps**             | Hosts the React frontend | Free tier available    |
 
 HTTPS is **required** for service workers and the PWA install prompt. Both services provide HTTPS automatically.
@@ -261,7 +261,7 @@ az webapp create \
   --name tlc-api-app \
   --resource-group tlc-rg \
   --plan tlc-api-plan \
-  --runtime "DOTNETCORE:8.0"
+  --runtime "DOTNETCORE:10.0"
 ```
 
 #### Step 2 — Configure application settings
