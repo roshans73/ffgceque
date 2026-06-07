@@ -131,7 +131,7 @@ export const Dashboard: React.FC = () => {
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={2}>
+            <Grid item xs={12} md={1}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   label="Start Date"
@@ -141,10 +141,10 @@ export const Dashboard: React.FC = () => {
                     textField: { fullWidth: true, placeholder: 'dd/mm/yyyy' },
                     toolbar: { title: 'Start Date' as any },
                   }}
-                  />
+                />
               </LocalizationProvider>
             </Grid>
-            <Grid item xs={12} md={2}>
+            <Grid item xs={12} md={1}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   label="End Date"
@@ -156,7 +156,7 @@ export const Dashboard: React.FC = () => {
                 />
               </LocalizationProvider>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={5}>
               <TextField
                 select
                 label="District"
@@ -170,7 +170,7 @@ export const Dashboard: React.FC = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={5}>
               <TextField
                 select
                 label="Block"
@@ -185,10 +185,15 @@ export const Dashboard: React.FC = () => {
                 ))}
               </TextField>
             </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Stack direction="row" spacing={2}>
-                <Button variant="contained" onClick={loadKpis} disabled={loading}>
+            <Grid item xs={12}>
+              <Stack direction="column" spacing={1} alignItems="flex-start" sx={{ mt: 1 }}>
+                <Button
+                  variant="contained"
+                  onClick={loadKpis}
+                  disabled={loading}
+                  size="small"
+                  sx={{ minWidth: 140 }}
+                >
                   Apply Filters
                 </Button>
                 <Button
@@ -200,6 +205,8 @@ export const Dashboard: React.FC = () => {
                     setBlockId(undefined);
                     loadKpis();
                   }}
+                  size="small"
+                  sx={{ minWidth: 140 }}
                 >
                   Clear
                 </Button>
