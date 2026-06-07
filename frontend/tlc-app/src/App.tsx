@@ -21,6 +21,7 @@ import TLCAttendancePage from './pages/TLCAttendancePage';
 import MasterclassAttendancePage from './pages/MasterclassAttendancePage';
 import YearEndReportPage from './pages/YearEndReportPage';
 import LongitudinalReportPage from './pages/LongitudinalReportPage';
+import TeacherLeaderFormationReportPage from './pages/TeacherLeaderFormationReportPage';
 import UsersPage from './pages/UsersPage';
 
 const theme = createTheme({
@@ -75,6 +76,9 @@ const AppContent: React.FC = () => (
     } />
     <Route path="/reports/longitudinal" element={
       <RoleProtectedRoute><Layout><LongitudinalReportPage /></Layout></RoleProtectedRoute>
+    } />
+    <Route path="/reports/teacherleader-formation" element={
+      <RoleProtectedRoute><Layout><TeacherLeaderFormationReportPage /></Layout></RoleProtectedRoute>
     } />
 
     {/* Fallback */}
