@@ -32,11 +32,12 @@ import BulkUploadDialog from '../components/BulkUploadDialog';
 const CoachesPage: React.FC = () => {
   const [coaches,       setCoaches]       = useState<Coach[]>([]);
   const [districts,     setDistricts]     = useState<District[]>([]);
-  const [filterBlocks,  setFilterBlocks]  = useState<Block[]>([]);
+  const [blocks,        setBlocks]        = useState<Block[]>([]);
   const [formBlocks,    setFormBlocks]    = useState<Block[]>([]);
-  const [filterDistrict, setFilterDistrict] = useState('');
-  const [filterBlock,    setFilterBlock]    = useState('');
   const [loading,       setLoading]       = useState(true);
+
+  const districtName = (id: number) => districts.find((d) => d.id === id)?.name ?? '—';
+  const blockName    = (id: number) => blocks.find((b) => b.id === id)?.name ?? '—';
 
   // Add dialog
   const [addOpen,  setAddOpen]  = useState(false);
@@ -49,31 +50,18 @@ const CoachesPage: React.FC = () => {
 
   useEffect(() => {
     apiClient.getDistricts().then((r) => setDistricts(r.data)).catch(console.error);
+    apiClient.getBlocks().then((r) => setBlocks(r.data)).catch(console.error);
   }, []);
 
-  useEffect(() => { loadCoaches(); }, [filterDistrict, filterBlock]);
+  useEffect(() => { loadCoaches(); }, []);
 
   const loadCoaches = async () => {
     setLoading(true);
     try {
-      const r = await apiClient.getCoaches(
-        filterDistrict ? Number(filterDistrict) : undefined,
-        filterBlock    ? Number(filterBlock)    : undefined,
-      );
+      const r = await apiClient.getCoaches();
       setCoaches(r.data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  };
-
-  const handleFilterDistrictChange = async (e: SelectChangeEvent) => {
-    setFilterDistrict(e.target.value);
-    setFilterBlock('');
-    if (e.target.value) {
-      const r = await apiClient.getBlocks(Number(e.target.value));
-      setFilterBlocks(r.data);
-    } else {
-      setFilterBlocks([]);
-    }
   };
 
   const handleFormDistrictChange = async (e: SelectChangeEvent) => {
@@ -136,30 +124,6 @@ const CoachesPage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Filters */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>District</InputLabel>
-          <Select value={filterDistrict} label="District" onChange={handleFilterDistrictChange}>
-            <MenuItem value="">All Districts</MenuItem>
-            {districts.map((d) => (
-              <MenuItem key={d.id} value={String(d.id)}>{d.name}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {filterDistrict && (
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Block</InputLabel>
-            <Select value={filterBlock} label="Block" onChange={(e: SelectChangeEvent) => setFilterBlock(e.target.value)}>
-              <MenuItem value="">All Blocks</MenuItem>
-              {filterBlocks.map((b) => (
-                <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-      </Box>
-
       {/* Table */}
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 6 }}>
@@ -172,6 +136,8 @@ const CoachesPage: React.FC = () => {
               <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'grey.50' } }}>
                 <TableCell>Emp No</TableCell>
                 <TableCell>Name</TableCell>
+                <TableCell>District</TableCell>
+                <TableCell>Block</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -179,11 +145,13 @@ const CoachesPage: React.FC = () => {
                 <TableRow key={c.id} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
                   <TableCell>{c.empNo}</TableCell>
                   <TableCell>{c.name}</TableCell>
+                  <TableCell>{districtName(c.districtId)}</TableCell>
+                  <TableCell>{blockName(c.blockId)}</TableCell>
                 </TableRow>
               ))}
               {coaches.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={2} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  <TableCell colSpan={4} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                     No coaches found
                   </TableCell>
                 </TableRow>
