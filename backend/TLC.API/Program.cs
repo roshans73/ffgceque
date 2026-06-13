@@ -1,5 +1,8 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
+using TLC.API.Authentication;
 using TLC.API.Middleware;
 using TLC.Core.Services;
 using TLC.Infrastructure;
@@ -22,8 +25,26 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICodeGeneratorService, CodeGeneratorService>();
 builder.Services.AddScoped<IImportService, ImportService>();
 
-// Add Azure AD Authentication
-builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
+// Add Authentication
+var useAzureAd = !string.IsNullOrWhiteSpace(builder.Configuration["AzureAd:ClientId"]) &&
+                 builder.Configuration["AzureAd:ClientId"] != "your-client-id" &&
+                 !string.IsNullOrWhiteSpace(builder.Configuration["AzureAd:TenantId"]);
+
+if (useAzureAd)
+{
+    builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, "AzureAd");
+}
+else
+{
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = "Development";
+        options.DefaultChallengeScheme = "Development";
+        options.DefaultScheme = "Development";
+    }).AddScheme<AuthenticationSchemeOptions, DevelopmentAuthenticationHandler>("Development", options => { });
+}
+
+builder.Services.AddAuthorization();
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -49,8 +70,29 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");
-//app.UseAuthentication();
-//app.UseAuthorization();
+
+if (app.Environment.IsDevelopment())
+{
+    app.Use(async (context, next) =>
+    {
+        if (context.User?.Identity?.IsAuthenticated != true)
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, "dev-user"),
+                new Claim(ClaimTypes.Role, "TechMETeam"),
+                new Claim(ClaimTypes.Role, "TLCManager"),
+                new Claim(ClaimTypes.Role, "SustainabilityLead")
+            };
+            context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Development"));
+        }
+
+        await next();
+    });
+}
+
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();

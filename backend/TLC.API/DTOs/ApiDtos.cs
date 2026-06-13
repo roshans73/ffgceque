@@ -245,6 +245,8 @@ public class AttendeeDto
     public bool IsTipTeacher { get; set; }
     public int? YearsInTip { get; set; }
     public int? CoachId { get; set; }
+    public int? DistrictId { get; set; }
+    public int? BlockId { get; set; }
 }
 
 public class MasterclassAttendanceEntryDto

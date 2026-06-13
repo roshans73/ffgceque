@@ -1,0 +1,360 @@
+Using launch settings from d:\ffgceque\backend\TLC.API\Properties\launchSettings.json...
+Building...
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10401]
+      An 'IServiceProvider' was created for internal use by Entity Framework.
+dbug: Microsoft.EntityFrameworkCore.Model[10601]
+      The index {'DistrictId'} was not created on entity type 'Teacher' as the properties are already covered by the index {'DistrictId', 'BlockId', 'Name'}.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.8 initialized 'TLCDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.8' with options: None
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (18ms).
+dbug: Microsoft.EntityFrameworkCore.Migrations[20400]
+      Migrating using database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server 'tlc_management.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+info: Microsoft.EntityFrameworkCore.Migrations[20411]
+      Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteScalar'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteScalar' (7ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteScalar' (19ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "name" = '__EFMigrationsLock' AND "type" = 'table';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (79ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "name" = '__EFMigrationsLock' AND "type" = 'table';
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteScalar'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteScalar' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteScalar' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT OR IGNORE INTO "__EFMigrationsLock"("Id", "Timestamp") VALUES(1, '2026-06-07 20:19:46.2053796+00:00');
+      SELECT changes();
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (37ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT OR IGNORE INTO "__EFMigrationsLock"("Id", "Timestamp") VALUES(1, '2026-06-07 20:19:46.2053796+00:00');
+      SELECT changes();
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20209]
+      Beginning transaction with isolation level 'Unspecified'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20200]
+      Began transaction with isolation level 'Serializable'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteNonQuery'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteNonQuery' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+          "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+          "ProductVersion" TEXT NOT NULL
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+          "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+          "ProductVersion" TEXT NOT NULL
+      );
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20210]
+      Committing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20202]
+      Committed transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20204]
+      Disposing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20209]
+      Beginning transaction with isolation level 'Unspecified'.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20200]
+      Began transaction with isolation level 'Serializable'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server 'tlc_management.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteScalar'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteScalar' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteScalar' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "name" = '__EFMigrationsHistory' AND "type" = 'table';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "name" = '__EFMigrationsHistory' AND "type" = 'table';
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db' is being disposed after spending 6ms reading results.
+info: Microsoft.EntityFrameworkCore.Migrations[20405]
+      No migrations were applied. The database is already up to date.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20210]
+      Committing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20202]
+      Committed transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteScalar'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteScalar' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteScalar' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DELETE FROM "__EFMigrationsLock";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DELETE FROM "__EFMigrationsLock";
+dbug: Microsoft.EntityFrameworkCore.Database.Transaction[20204]
+      Disposing transaction.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server 'tlc_management.db' (4ms).
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'TLCDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server 'tlc_management.db' (0ms).
+dbug: Microsoft.Extensions.Hosting.Internal.Host[1]
+      Hosting starting
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5210
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: d:\ffgceque\backend\TLC.API
+dbug: Microsoft.Extensions.Hosting.Internal.Host[2]
+      Hosting started
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]
+      Failed to determine the https port for redirect.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 10.0.8 initialized 'TLCDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite:10.0.8' with options: None
+dbug: Microsoft.EntityFrameworkCore.Query[10111]
+      Compiling query expression: 
+      'DbSet<Teacher>()'
+dbug: Microsoft.EntityFrameworkCore.Query[10107]
+      Generated query execution expression: 
+      'queryContext => SingleQueryingEnumerable.Create<Teacher>(
+          relationalQueryContext: (RelationalQueryContext)queryContext, 
+          relationalCommandResolver: parameters => [LIFTABLE Constant: RelationalCommandCache.QueryExpression(
+              Projection Mapping:
+                  EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: Teacher.Id (int) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: Teacher.BlockId (int) Required FK Index, 1], [Property: Teacher.CoachId (int?) FK Index, 2], [Property: Teacher.CreatedAt (DateTime) Required, 3], [Property: Teacher.DistrictId (int) Required FK Index, 4], [Property: Teacher.Email (string) Required, 5], [Property: Teacher.Gender (string) Required, 6], [Property: Teacher.IsTipTeacher (bool) Required, 7], [Property: Teacher.Mobile (string) Required, 8], [Property: Teacher.Name (string) Required Index, 9], [Property: Teacher.RegisteredDate (DateTime) Required, 10], [Property: Teacher.School (string) Required, 11], [Property: Teacher.TeacherCode (string) Required Index, 12], [Property: Teacher.UpdatedAt (DateTime?), 13], [Property: Teacher.YearsInTip (int?), 14] }
+              SELECT t.Id, t.BlockId, t.CoachId, t.CreatedAt, t.DistrictId, t.Email, t.Gender, t.IsTipTeacher, t.Mobile, t.Name, t.RegisteredDate, t.School, t.TeacherCode, t.UpdatedAt, t.YearsInTip
+              FROM Teachers AS t) | Resolver: c => new RelationalCommandCache(
+              c.Dependencies.MemoryCache, 
+              c.RelationalDependencies.QuerySqlGeneratorFactory, 
+              c.RelationalDependencies.RelationalParameterBasedSqlProcessorFactory, 
+              Projection Mapping:
+                  EmptyProjectionMember -> Dictionary<IPropertyBase, int> { [Property: Teacher.Id (int) Required PK AfterSave:Throw ValueGenerated.OnAdd, 0], [Property: Teacher.BlockId (int) Required FK Index, 1], [Property: Teacher.CoachId (int?) FK Index, 2], [Property: Teacher.CreatedAt (DateTime) Required, 3], [Property: Teacher.DistrictId (int) Required FK Index, 4], [Property: Teacher.Email (string) Required, 5], [Property: Teacher.Gender (string) Required, 6], [Property: Teacher.IsTipTeacher (bool) Required, 7], [Property: Teacher.Mobile (string) Required, 8], [Property: Teacher.Name (string) Required Index, 9], [Property: Teacher.RegisteredDate (DateTime) Required, 10], [Property: Teacher.School (string) Required, 11], [Property: Teacher.TeacherCode (string) Required Index, 12], [Property: Teacher.UpdatedAt (DateTime?), 13], [Property: Teacher.YearsInTip (int?), 14] }
+              SELECT t.Id, t.BlockId, t.CoachId, t.CreatedAt, t.DistrictId, t.Email, t.Gender, t.IsTipTeacher, t.Mobile, t.Name, t.RegisteredDate, t.School, t.TeacherCode, t.UpdatedAt, t.YearsInTip
+              FROM Teachers AS t, 
+              False, 
+              MultipleParameters
+          )].GetRelationalCommandTemplate(parameters), 
+          readerColumns: null, 
+          shaper: (queryContext, dataReader, resultContext, resultCoordinator) => 
+          {
+              Teacher entity;
+              entity = 
+              {
+                  MaterializationContext materializationContext1;
+                  IEntityType entityType1;
+                  Teacher instance1;
+                  InternalEntityEntry entry1;
+                  bool hasNullKey1;
+                  materializationContext1 = new MaterializationContext(
+                      [LIFTABLE Constant: ValueBuffer | Resolver: _ => (object)ValueBuffer.Empty], 
+                      queryContext.Context
+                  );
+                  instance1 = default(Teacher);
+                  entry1 = queryContext.TryGetEntry(
+                      key: [LIFTABLE Constant: Key: Teacher.Id PK | Resolver: c => c.Dependencies.Model.FindEntityType("TLC.Core.Models.Teacher").FindPrimaryKey()], 
+                      keyValues: new object[]{ (object)dataReader.GetInt32(0) }, 
+                      throwOnNullKey: True, 
+                      hasNullKey: hasNullKey1);
+                  !(hasNullKey1) ? entry1 != default(InternalEntityEntry) ? 
+                  {
+                      entityType1 = entry1.EntityType;
+                      return instance1 = (Teacher)entry1.Entity;
+                  } : 
+                  {
+                      ISnapshot shadowSnapshot1;
+                      shadowSnapshot1 = [LIFTABLE Constant: Snapshot | Resolver: _ => Snapshot.Empty];
+                      entityType1 = [LIFTABLE Constant: EntityType: Teacher | Resolver: namelessParameter{0} => namelessParameter{0}.Dependencies.Model.FindEntityType("TLC.Core.Models.Teacher")];
+                      instance1 = switch (entityType1)
+                      {
+                          case [LIFTABLE Constant: EntityType: Teacher | Resolver: namelessParameter{1} => namelessParameter{1}.Dependencies.Model.FindEntityType("TLC.Core.Models.Teacher")]: 
+                              {
+                                  return 
+                                  {
+                                      Teacher instance;
+                                      instance = new Teacher();
+                                      instance.<Id>k__BackingField = dataReader.GetInt32(0);
+                                      instance.<BlockId>k__BackingField = dataReader.GetInt32(1);
+                                      instance.<CoachId>k__BackingField = dataReader.IsDBNull(2) ? default(int?) : (int?)dataReader.GetInt32(2);
+                                      instance.<CreatedAt>k__BackingField = dataReader.GetDateTime(3);
+                                      instance.<DistrictId>k__BackingField = dataReader.GetInt32(4);
+                                      instance.<Email>k__BackingField = dataReader.GetString(5);
+                                      instance.<Gender>k__BackingField = dataReader.GetString(6);
+                                      instance.<IsTipTeacher>k__BackingField = dataReader.GetBoolean(7);
+                                      instance.<Mobile>k__BackingField = dataReader.GetString(8);
+                                      instance.<Name>k__BackingField = dataReader.GetString(9);
+                                      instance.<RegisteredDate>k__BackingField = dataReader.GetDateTime(10);
+                                      instance.<School>k__BackingField = dataReader.GetString(11);
+                                      instance.<TeacherCode>k__BackingField = dataReader.GetString(12);
+                                      instance.<UpdatedAt>k__BackingField = dataReader.IsDBNull(13) ? default(DateTime?) : (DateTime?)dataReader.GetDateTime(13);
+                                      instance.<YearsInTip>k__BackingField = dataReader.IsDBNull(14) ? default(int?) : (int?)dataReader.GetInt32(14);
+                                      (instance is IInjectableService) ? ((IInjectableService)instance).Injected(
+                                          context: materializationContext1.Context, 
+                                          entity: instance, 
+                                          queryTrackingBehavior: TrackAll, 
+                                          structuralType: [LIFTABLE Constant: EntityType: Teacher | Resolver: namelessParameter{2} => namelessParameter{2}.Dependencies.Model.FindEntityType("TLC.Core.Models.Teacher")]) : default(void);
+                                      return instance;
+                                  }}
+                          default: 
+                              default(Teacher)
+                      }
+                      ;
+                      entry1 = entityType1 == default(IEntityType) ? default(InternalEntityEntry) : queryContext.StartTracking(
+                          entityType: entityType1, 
+                          entity: instance1, 
+                          snapshot: shadowSnapshot1);
+                      return instance1;
+                  } : default(void);
+                  return instance1;
+              };
+              return entity;
+          }, 
+          contextType: TLC.Infrastructure.TLCDbContext, 
+          standAloneStateManager: False, 
+          detailedErrorsEnabled: False, 
+          threadSafetyChecksEnabled: True)'
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20005]
+      Creating DbConnection.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20006]
+      Created DbConnection. (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."BlockId", "t"."CoachId", "t"."CreatedAt", "t"."DistrictId", "t"."Email", "t"."Gender", "t"."IsTipTeacher", "t"."Mobile", "t"."Name", "t"."RegisteredDate", "t"."School", "t"."TeacherCode", "t"."UpdatedAt", "t"."YearsInTip"
+      FROM "Teachers" AS "t"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "t"."Id", "t"."BlockId", "t"."CoachId", "t"."CreatedAt", "t"."DistrictId", "t"."Email", "t"."Gender", "t"."IsTipTeacher", "t"."Mobile", "t"."Name", "t"."RegisteredDate", "t"."School", "t"."TeacherCode", "t"."UpdatedAt", "t"."YearsInTip"
+      FROM "Teachers" AS "t"
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db' is being disposed after spending 9ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server 'tlc_management.db' (1ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10808]
+      'TLCDbContext' generated a temporary value for the property 'Teacher.Id'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10806]
+      Context 'TLCDbContext' started tracking 'Teacher' entity. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10004]
+      SaveChanges starting for 'TLCDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10800]
+      DetectChanges starting for 'TLCDbContext'.
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10801]
+      DetectChanges completed for 'TLCDbContext'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20000]
+      Opening connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20001]
+      Opened connection to database 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20103]
+      Creating DbCommand for 'ExecuteReader'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20104]
+      Created DbCommand for 'ExecuteReader' (0ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20106]
+      Initialized DbCommand for 'ExecuteReader' (4ms).
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20100]
+      Executing DbCommand [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32), @p2='?' (DbType = DateTime), @p3='?' (DbType = Int32), @p4='?' (Size = 20), @p5='?' (Size = 1), @p6='?' (DbType = Boolean), @p7='?' (Size = 10), @p8='?' (Size = 8), @p9='?' (DbType = DateTime), @p10='?' (Size = 13), @p11='?' (Size = 5), @p12='?' (DbType = DateTime), @p13='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "Teachers" ("BlockId", "CoachId", "CreatedAt", "DistrictId", "Email", "Gender", "IsTipTeacher", "Mobile", "Name", "RegisteredDate", "School", "TeacherCode", "UpdatedAt", "YearsInTip")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13)
+      RETURNING "Id";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (14ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32), @p2='?' (DbType = DateTime), @p3='?' (DbType = Int32), @p4='?' (Size = 20), @p5='?' (Size = 1), @p6='?' (DbType = Boolean), @p7='?' (Size = 10), @p8='?' (Size = 8), @p9='?' (DbType = DateTime), @p10='?' (Size = 13), @p11='?' (Size = 5), @p12='?' (DbType = DateTime), @p13='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "Teachers" ("BlockId", "CoachId", "CreatedAt", "DistrictId", "Email", "Gender", "IsTipTeacher", "Mobile", "Name", "RegisteredDate", "School", "TeacherCode", "UpdatedAt", "YearsInTip")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13)
+      RETURNING "Id";
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10803]
+      The foreign key property 'Teacher.Id' was detected as changed. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see property values.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20301]
+      Closing data reader to 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Command[20300]
+      A data reader for 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db' is being disposed after spending 68ms reading results.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20002]
+      Closing connection to database 'main' on server 'd:\ffgceque\backend\TLC.API\tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20003]
+      Closed connection to database 'main' on server 'tlc_management.db' (0ms).
+dbug: Microsoft.EntityFrameworkCore.ChangeTracking[10807]
+      An entity of type 'Teacher' tracked by 'TLCDbContext' changed state from 'Added' to 'Unchanged'. Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see key values.
+dbug: Microsoft.EntityFrameworkCore.Update[10005]
+      SaveChanges completed for 'TLCDbContext' with 1 entities written to the database.
+dbug: Microsoft.EntityFrameworkCore.Infrastructure[10407]
+      'TLCDbContext' disposed.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20007]
+      Disposing connection to database 'main' on server 'tlc_management.db'.
+dbug: Microsoft.EntityFrameworkCore.Database.Connection[20008]
+      Disposed connection to database 'main' on server 'tlc_management.db' (0ms).
