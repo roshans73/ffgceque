@@ -5,7 +5,8 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box } from '@mui/material';
+import theme from './theme';
 import { AuthProvider } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { RoleProtectedRoute } from './components/RoleProtectedRoute';
@@ -20,18 +21,9 @@ import TLCGroupsPage from './pages/TLCGroupsPage';
 import TLCAttendancePage from './pages/TLCAttendancePage';
 import MasterclassAttendancePage from './pages/MasterclassAttendancePage';
 import YearEndReportPage from './pages/YearEndReportPage';
+import EventCalendarPage from './pages/EventCalendarPage';
 import LongitudinalReportPage from './pages/LongitudinalReportPage';
 import UsersPage from './pages/UsersPage';
-
-const theme = createTheme({
-  palette: {
-    primary:   { main: '#1976d2' },
-    secondary: { main: '#dc004e' },
-  },
-  typography: {
-    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif',
-  },
-});
 
 const AppContent: React.FC = () => (
   <Routes>
@@ -59,6 +51,11 @@ const AppContent: React.FC = () => (
       <RoleProtectedRoute requiredRoles={['TechMETeam', 'SustainabilityLead']}>
         <Layout><UsersPage /></Layout>
       </RoleProtectedRoute>
+    } />
+
+    {/* Event Calendar — all authenticated roles */}
+    <Route path="/events/calendar" element={
+      <RoleProtectedRoute><Layout><EventCalendarPage /></Layout></RoleProtectedRoute>
     } />
 
     {/* Attendance */}
@@ -90,7 +87,7 @@ function App() {
       <Router>
         <AuthProvider>
           <SyncProvider>
-            <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
               <AppContent />
             </Box>
           </SyncProvider>

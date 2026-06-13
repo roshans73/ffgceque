@@ -46,12 +46,14 @@ const EMPTY_FORM: TLCGroupForm = {
 const TLCGroupsPage: React.FC = () => {
   const [groups,         setGroups]         = useState<TLCGroup[]>([]);
   const [districts,      setDistricts]      = useState<District[]>([]);
-  const [filterBlocks,   setFilterBlocks]   = useState<Block[]>([]);
   const [formBlocks,     setFormBlocks]     = useState<Block[]>([]);
   const [teachers,       setTeachers]       = useState<Teacher[]>([]);
-  const [filterDistrict, setFilterDistrict] = useState('');
-  const [filterBlock,    setFilterBlock]    = useState('');
   const [loading,        setLoading]        = useState(true);
+
+  const districtName = (id: number) => districts.find((d) => d.id === id)?.name ?? '—';
+  const teacherName  = (id: number) => teachers.find((t) => t.id === id)?.name ?? '—';
+  // Short form is the suffix of the auto-generated code (format XXnn-YY)
+  const shortForm    = (code: string) => code.split('-')[1] ?? '—';
 
   // Add dialog
   const [addOpen,   setAddOpen]   = useState(false);
@@ -67,7 +69,7 @@ const TLCGroupsPage: React.FC = () => {
     apiClient.getTeachers().then((r) => setTeachers(r.data)).catch(console.error);
   }, []);
 
-  useEffect(() => { loadGroups(); }, [filterDistrict, filterBlock]);
+  useEffect(() => { loadGroups(); }, []);
 
   const loadGroups = async () => {
     setLoading(true);
@@ -76,17 +78,6 @@ const TLCGroupsPage: React.FC = () => {
       setGroups(r.data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  };
-
-  const handleFilterDistrictChange = async (e: SelectChangeEvent) => {
-    setFilterDistrict(e.target.value);
-    setFilterBlock('');
-    if (e.target.value) {
-      const r = await apiClient.getBlocks(Number(e.target.value));
-      setFilterBlocks(r.data);
-    } else {
-      setFilterBlocks([]);
-    }
   };
 
   const handleFormDistrictChange = async (e: SelectChangeEvent) => {
@@ -136,12 +127,6 @@ const TLCGroupsPage: React.FC = () => {
     }
   };
 
-  const filtered = groups.filter((g) => {
-    if (filterDistrict && g.districtId !== Number(filterDistrict)) return false;
-    if (filterBlock    && g.blockId    !== Number(filterBlock))    return false;
-    return true;
-  });
-
   return (
     <Box>
       {/* Header */}
@@ -162,31 +147,6 @@ const TLCGroupsPage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Filters */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>District</InputLabel>
-          <Select value={filterDistrict} label="District" onChange={handleFilterDistrictChange}>
-            <MenuItem value="">All Districts</MenuItem>
-            {districts.map((d) => (
-              <MenuItem key={d.id} value={String(d.id)}>{d.name}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {filterDistrict && (
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Block</InputLabel>
-            <Select value={filterBlock} label="Block"
-              onChange={(e: SelectChangeEvent) => setFilterBlock(e.target.value)}>
-              <MenuItem value="">All Blocks</MenuItem>
-              {filterBlocks.map((b) => (
-                <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-      </Box>
-
       {/* Table */}
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 6 }}>
@@ -198,23 +158,29 @@ const TLCGroupsPage: React.FC = () => {
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'grey.50' } }}>
                 <TableCell>Group Code</TableCell>
+                <TableCell>District</TableCell>
+                <TableCell>Group Short Form</TableCell>
+                <TableCell>Teacher Leader</TableCell>
                 <TableCell>Location</TableCell>
                 <TableCell>Date Formed</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filtered.map((g) => (
+              {groups.map((g) => (
                 <TableRow key={g.id} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
                   <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600 }}>{g.tlcGroupCode}</TableCell>
+                  <TableCell>{districtName(g.districtId)}</TableCell>
+                  <TableCell sx={{ fontFamily: 'monospace' }}>{shortForm(g.tlcGroupCode)}</TableCell>
+                  <TableCell>{teacherName(g.teacherLeaderId)}</TableCell>
                   <TableCell>{g.location}</TableCell>
                   <TableCell sx={{ color: 'text.secondary' }}>
                     {new Date(g.dateFormed).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {groups.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                     No TLC groups found
                   </TableCell>
                 </TableRow>

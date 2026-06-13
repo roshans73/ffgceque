@@ -161,7 +161,7 @@ const TeachersPage: React.FC = () => {
         label="Search by name, code, or school"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 3, width: 360 }}
+        sx={{ mb: 3, width: { xs: '100%', sm: 360 } }}
         size="small"
       />
 
