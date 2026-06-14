@@ -119,6 +119,16 @@ class ApiClient {
   recordMasterclassAttendance = (data: any) =>
     this.instance.post('/attendance/masterclass', data);
 
+  // TLC & Masterclass Events
+  getTLCAndMasterclasses = (params?: { type?: string; status?: string; districtId?: number; blockId?: number; tlcGroupId?: number; year?: number }) =>
+    this.instance.get('/tlcandmasterclass', { params });
+
+  createTLCAndMasterclass = (data: unknown) =>
+    this.instance.post('/tlcandmasterclass', data);
+
+  updateTLCAndMasterclass = (id: number, data: unknown) =>
+    this.instance.put(`/tlcandmasterclass/${id}`, data);
+
   // Analytics APIs
   getDashboardKpis = (districtId?: number, blockId?: number) =>
     this.instance.get('/analytics/dashboard', {
