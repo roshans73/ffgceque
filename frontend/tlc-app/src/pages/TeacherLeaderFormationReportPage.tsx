@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -16,20 +16,23 @@ import {
   TableHead,
   TableRow,
   Grid,
-} from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
-import apiClient from '../services/apiClient';
-import type { District, TeacherLeaderFormation } from '../types';
+} from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material";
+import apiClient from "../services/apiClient";
+import type { District, TeacherLeaderFormation } from "../types";
 
 const TeacherLeaderFormationReportPage: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
-  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState("");
   const [data, setData] = useState<TeacherLeaderFormation[]>([]);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    apiClient.getDistricts().then((r) => setDistricts(r.data)).catch(console.error);
+    apiClient
+      .getDistricts()
+      .then((r) => setDistricts(r.data))
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -40,7 +43,7 @@ const TeacherLeaderFormationReportPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await apiClient.getTeacherLeaderFormationReport(
-        selectedDistrict ? Number(selectedDistrict) : undefined
+        selectedDistrict ? Number(selectedDistrict) : undefined,
       );
       setData(response.data);
     } catch (error) {
@@ -54,16 +57,18 @@ const TeacherLeaderFormationReportPage: React.FC = () => {
     setDownloading(true);
     try {
       const response = await apiClient.downloadTeacherLeaderFormationReport(
-        selectedDistrict ? Number(selectedDistrict) : undefined
+        selectedDistrict ? Number(selectedDistrict) : undefined,
       );
 
+      const contentType = response.headers["content-type"];
+
       const blob = new Blob([response.data], {
-        type: response.headers['content-type'] || 'text/csv',
+        type: typeof contentType === "string" ? contentType : "text/csv",
       });
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', 'teacher-leader-formation.csv');
+      link.setAttribute("download", "teacher-leader-formation.csv");
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -81,13 +86,15 @@ const TeacherLeaderFormationReportPage: React.FC = () => {
         Teacher Leader Formation Report
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
         <FormControl sx={{ minWidth: 220 }}>
           <InputLabel>District</InputLabel>
           <Select
             value={selectedDistrict}
             label="District"
-            onChange={(e: SelectChangeEvent) => setSelectedDistrict(e.target.value)}
+            onChange={(e: SelectChangeEvent) =>
+              setSelectedDistrict(e.target.value)
+            }
           >
             <MenuItem value="">All Districts</MenuItem>
             {districts.map((district) => (
@@ -104,27 +111,28 @@ const TeacherLeaderFormationReportPage: React.FC = () => {
           onClick={downloadCsv}
           disabled={downloading}
         >
-          {downloading ? 'Downloading...' : 'Download CSV'}
+          {downloading ? "Downloading..." : "Download CSV"}
         </Button>
       </Box>
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
       ) : (
         <Paper sx={{ p: 3 }}>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Typography variant="subtitle2">Rows</Typography>
               <Typography variant="h5">{data.length}</Typography>
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Typography variant="subtitle2">District</Typography>
               <Typography variant="h5">
                 {selectedDistrict
-                  ? districts.find((d) => String(d.id) === selectedDistrict)?.name ?? 'Selected'
-                  : 'All Districts'}
+                  ? (districts.find((d) => String(d.id) === selectedDistrict)
+                      ?.name ?? "Selected")
+                  : "All Districts"}
               </Typography>
             </Grid>
           </Grid>
@@ -155,7 +163,9 @@ const TeacherLeaderFormationReportPage: React.FC = () => {
               </Table>
             </TableContainer>
           ) : (
-            <Typography color="textSecondary">No teacher leader formation data found.</Typography>
+            <Typography color="textSecondary">
+              No teacher leader formation data found.
+            </Typography>
           )}
         </Paper>
       )}

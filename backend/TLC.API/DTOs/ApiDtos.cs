@@ -220,6 +220,22 @@ public class DashboardKpiDto
     public int TlcMeetsConducted { get; set; }
     public int TlcsCancelled { get; set; }
     public int MasterclassesHeld { get; set; }
+    public int TipTeachersAttendedAtLeastOne { get; set; }
+    public int NonTipTeachersAttendedAtLeastOne { get; set; }
+    public int TlcMeetsHeld { get; set; }
+    public double PercentTeachersMin3 { get; set; }
+    public int UniqueTeachers60PercentOrMore { get; set; }
+    public double AvgTeachersPerMasterclass { get; set; }
+    public List<AttendanceReportEntryDto> AttendanceReport { get; set; } = new();
+}
+
+public class AttendanceReportEntryDto
+{
+    public int TeacherId { get; set; }
+    public string TeacherName { get; set; } = string.Empty;
+    public string School { get; set; } = string.Empty;
+    public int TlcsAttended { get; set; }
+    public double PercentOfTotal { get; set; }
 }
 
 // Attendance Entry DTOs
