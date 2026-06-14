@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TLC.API.DTOs;
@@ -214,6 +215,78 @@ public class AnalyticsController : ControllerBase
         {
             _logger.LogError(ex, "Error getting longitudinal analysis");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving analysis data" });
+        }
+    }
+
+    [HttpGet("teacherleader-formation")]
+    public async Task<ActionResult> GetTeacherLeaderFormationReport(int? districtId = null, int? blockId = null, string? format = null)
+    {
+        try
+        {
+            var teacherLeaders = (await _unitOfWork.TeacherLeaders.GetAll()).ToList();
+            var tlcGroups = (await _unitOfWork.TLCGroups.GetAll()).ToList();
+            var teachers = (await _unitOfWork.Teachers.GetAll()).ToList();
+            var districts = (await _unitOfWork.Districts.GetAll()).ToList();
+            var blocks = (await _unitOfWork.Blocks.GetAll()).ToList();
+
+            if (districtId.HasValue)
+            {
+                tlcGroups = tlcGroups.Where(g => g.DistrictId == districtId).ToList();
+            }
+
+            if (blockId.HasValue)
+            {
+                tlcGroups = tlcGroups.Where(g => g.BlockId == blockId).ToList();
+            }
+
+            var groupIds = tlcGroups.Select(g => g.Id).ToHashSet();
+            var reportRows = teacherLeaders
+                .Where(tl => groupIds.Contains(tl.TlcGroupId))
+                .Select(tl =>
+                {
+                    var group = tlcGroups.FirstOrDefault(g => g.Id == tl.TlcGroupId);
+                    var teacher = teachers.FirstOrDefault(t => t.Id == tl.TeacherId);
+                    var district = districts.FirstOrDefault(d => d.Id == group?.DistrictId);
+                    var block = blocks.FirstOrDefault(b => b.Id == group?.BlockId);
+                    return new
+                    {
+                        TeacherLeaderId = tl.Id,
+                        TeacherId = tl.TeacherId,
+                        TeacherName = teacher?.Name ?? string.Empty,
+                        School = teacher?.School ?? string.Empty,
+                        TlcGroupId = tl.TlcGroupId,
+                        TlcGroupCode = group?.TlcGroupCode ?? string.Empty,
+                        DateFormed = group?.DateFormed.ToString("yyyy-MM-dd") ?? string.Empty,
+                        District = district?.Name ?? string.Empty,
+                        Block = block?.Name ?? string.Empty,
+                        TeacherLeaderCreatedAt = tl.CreatedAt.ToString("yyyy-MM-dd")
+                    };
+                })
+                .OrderBy(r => r.DateFormed)
+                .ThenBy(r => r.TeacherLeaderId)
+                .ToList();
+
+            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                var builder = new StringBuilder();
+                builder.AppendLine("TeacherLeaderId,TeacherId,TeacherName,School,TlcGroupId,TlcGroupCode,DateFormed,District,Block,TeacherLeaderCreatedAt");
+
+                foreach (var row in reportRows)
+                {
+                    string Escape(string value) => value?.Replace("\"", "\"\"") ?? string.Empty;
+                    builder.AppendLine($"{row.TeacherLeaderId},{row.TeacherId},\"{Escape(row.TeacherName)}\",\"{Escape(row.School)}\",{row.TlcGroupId},\"{Escape(row.TlcGroupCode)}\",{row.DateFormed},\"{Escape(row.District)}\",\"{Escape(row.Block)}\",{row.TeacherLeaderCreatedAt}");
+                }
+
+                var csvBytes = Encoding.UTF8.GetBytes(builder.ToString());
+                return File(csvBytes, "text/csv; charset=utf-8", "teacher-leader-formation.csv");
+            }
+
+            return Ok(reportRows);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting teacher leader formation report");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the teacher leader formation report" });
         }
     }
 }

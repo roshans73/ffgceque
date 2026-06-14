@@ -23,6 +23,7 @@ import MasterclassAttendancePage from './pages/MasterclassAttendancePage';
 import YearEndReportPage from './pages/YearEndReportPage';
 import EventCalendarPage from './pages/EventCalendarPage';
 import LongitudinalReportPage from './pages/LongitudinalReportPage';
+import TeacherLeaderFormationReportPage from './pages/TeacherLeaderFormationReportPage';
 import UsersPage from './pages/UsersPage';
 
 const AppContent: React.FC = () => (
@@ -72,6 +73,9 @@ const AppContent: React.FC = () => (
     } />
     <Route path="/reports/longitudinal" element={
       <RoleProtectedRoute><Layout><LongitudinalReportPage /></Layout></RoleProtectedRoute>
+    } />
+    <Route path="/reports/teacherleader-formation" element={
+      <RoleProtectedRoute><Layout><TeacherLeaderFormationReportPage /></Layout></RoleProtectedRoute>
     } />
 
     {/* Fallback */}

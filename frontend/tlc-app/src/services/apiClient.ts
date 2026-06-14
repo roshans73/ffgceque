@@ -130,9 +130,9 @@ class ApiClient {
     this.instance.put(`/tlcandmasterclass/${id}`, data);
 
   // Analytics APIs
-  getDashboardKpis = (districtId?: number, blockId?: number) =>
+  getDashboardKpis = (districtId?: number, blockId?: number, startDate?: string, endDate?: string) =>
     this.instance.get('/analytics/dashboard', {
-      params: { districtId, blockId }
+      params: { districtId, blockId, startDate, endDate }
     });
 
   getYearEndSummary = (districtId?: number, blockId?: number, year?: number) =>
@@ -146,6 +146,17 @@ class ApiClient {
   getLongitudinalAnalysis = (districtId?: number, blockId?: number) =>
     this.instance.get('/analytics/longitudinal', {
       params: { districtId, blockId },
+    });
+
+  getTeacherLeaderFormationReport = (districtId?: number, blockId?: number) =>
+    this.instance.get('/analytics/teacherleader-formation', {
+      params: { districtId, blockId },
+    });
+
+  downloadTeacherLeaderFormationReport = (districtId?: number, blockId?: number) =>
+    this.instance.get('/analytics/teacherleader-formation', {
+      params: { districtId, blockId, format: 'csv' },
+      responseType: 'blob',
     });
 
   // User Management APIs
