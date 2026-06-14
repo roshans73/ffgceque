@@ -46,25 +46,36 @@ public class TLCGroupsController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "TechMETeam")]
-    public async Task<ActionResult<TLCGroupDto>> Create(CreateTLCGroupDto dto)
+    public async Task<IActionResult> Create(IEnumerable<CreateTLCGroupDto> dtos)
     {
-        var code = await _codeGenerator.GenerateTLCGroupCodeAsync(dto.DistrictId, dto.GroupShortForm);
+        var dtoList = dtos.ToList();
+        var groups = new List<TLCGroup>();
 
-        var group = new TLCGroup
+        foreach (var dto in dtoList)
         {
-            TlcGroupCode = code,
-            DistrictId = dto.DistrictId,
-            BlockId = dto.BlockId,
-            Location = dto.Location,
-            DateFormed = dto.DateFormed,
-            TeacherLeaderId = dto.TeacherLeaderId,
-            CreatedAt = DateTime.UtcNow
-        };
+            var code = await _codeGenerator.GenerateTLCGroupCodeAsync(dto.DistrictId, dto.GroupShortForm);
 
-        await _unitOfWork.TLCGroups.Add(group);
+            var group = new TLCGroup
+            {
+                TlcGroupCode = code,
+                DistrictId = dto.DistrictId,
+                BlockId = dto.BlockId,
+                Location = dto.Location,
+                DateFormed = dto.DateFormed,
+                TeacherLeaderId = dto.TeacherLeaderId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.TLCGroups.Add(group);
+            groups.Add(group);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = group.Id }, MapToDto(group));
+        if (dtoList.Count == 1)
+            return CreatedAtAction(nameof(GetById), new { id = groups[0].Id }, MapToDto(groups[0]));
+
+        return Ok(groups.Select(MapToDto));
     }
 
     [HttpPut("{id}")]

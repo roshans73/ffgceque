@@ -63,31 +63,76 @@ public class TeachersController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "TechMETeam")]
-    public async Task<ActionResult<TeacherDto>> Create(CreateTeacherDto dto)
+    public async Task<IActionResult> Create(IEnumerable<CreateTeacherDto> dtos)
     {
-        var teacherCode = await _codeGenerator.GenerateTeacherCodeAsync(dto.DistrictId);
+        var dtoList = dtos.ToList();
+        var teachers = new List<Teacher>();
 
-        var teacher = new Teacher
+        foreach (var dto in dtoList)
         {
-            TeacherCode = teacherCode,
-            Name = dto.Name,
-            School = dto.School,
-            DistrictId = dto.DistrictId,
-            BlockId = dto.BlockId,
-            Gender = dto.Gender,
-            Mobile = dto.Mobile,
-            Email = dto.Email,
-            IsTipTeacher = dto.IsTipTeacher,
-            YearsInTip = dto.YearsInTip,
-            CoachId = dto.CoachId,
-            RegisteredDate = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
-        };
+            var teacherCode = await _codeGenerator.GenerateTeacherCodeAsync(dto.DistrictId);
 
-        await _unitOfWork.Teachers.Add(teacher);
+            var teacher = new Teacher
+            {
+                TeacherCode = teacherCode,
+                Name = dto.Name,
+                School = dto.School,
+                DistrictId = dto.DistrictId,
+                BlockId = dto.BlockId,
+                Gender = dto.Gender,
+                Mobile = dto.Mobile,
+                Email = dto.Email,
+                IsTipTeacher = dto.IsTipTeacher,
+                YearsInTip = dto.YearsInTip,
+                CoachId = dto.CoachId,
+                RegisteredDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Teachers.Add(teacher);
+            teachers.Add(teacher);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = teacher.Id }, MapToDto(teacher));
+        if (dtoList.Count == 1)
+            return CreatedAtAction(nameof(GetById), new { id = teachers[0].Id }, MapToDto(teachers[0]));
+
+        return Ok(teachers.Select(MapToDto));
+    }
+
+    [HttpPost("bulk")]
+    [Authorize(Roles = "TechMETeam")]
+    public async Task<ActionResult<IEnumerable<TeacherDto>>> CreateBulk(IEnumerable<CreateTeacherDto> dtos)
+    {
+        var teachers = new List<Teacher>();
+        foreach (var dto in dtos)
+        {
+            var teacherCode = await _codeGenerator.GenerateTeacherCodeAsync(dto.DistrictId);
+
+            var teacher = new Teacher
+            {
+                TeacherCode = teacherCode,
+                Name = dto.Name,
+                School = dto.School,
+                DistrictId = dto.DistrictId,
+                BlockId = dto.BlockId,
+                Gender = dto.Gender,
+                Mobile = dto.Mobile,
+                Email = dto.Email,
+                IsTipTeacher = dto.IsTipTeacher,
+                YearsInTip = dto.YearsInTip,
+                CoachId = dto.CoachId,
+                RegisteredDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Teachers.Add(teacher);
+            teachers.Add(teacher);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+        return Ok(teachers.Select(MapToDto));
     }
 
     [HttpPut("{id}")]

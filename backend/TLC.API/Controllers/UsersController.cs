@@ -57,24 +57,58 @@ public class UsersController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "TechMETeam")]
-    public async Task<ActionResult<UserDto>> Create(CreateUserDto dto)
+    public async Task<IActionResult> Create(IEnumerable<CreateUserDto> dtos)
     {
-        var user = new User
-        {
-            AzureAadId = dto.AzureAadId,
-            Email = dto.Email,
-            Name = dto.Name,
-            RoleId = dto.RoleId,
-            DistrictId = dto.DistrictId,
-            BlockId = dto.BlockId,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
+        var dtoList = dtos.ToList();
+        var users = new List<User>();
+        var existingUsers = await _unitOfWork.Users.GetAll();
 
-        await _unitOfWork.Users.Add(user);
+        foreach (var dto in dtoList)
+        {
+            var email = dto.Email?.Trim() ?? string.Empty;
+            var name = dto.Name?.Trim() ?? string.Empty;
+            string? aadId = string.IsNullOrWhiteSpace(dto.AzureAadId) ? null : dto.AzureAadId!.Trim();
+
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("Email is required for all users.");
+
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest("Name is required for all users.");
+
+            if (existingUsers.Any(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest($"A user with email '{email}' already exists.");
+
+            if (!string.IsNullOrWhiteSpace(aadId) && existingUsers.Any(u => string.Equals(u.AzureAadId, aadId, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest($"A user with Azure AD object ID '{aadId}' already exists.");
+
+            if (users.Any(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest($"Duplicate email '{email}' in request.");
+
+            if (!string.IsNullOrWhiteSpace(aadId) && users.Any(u => string.Equals(u.AzureAadId, aadId, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest($"Duplicate Azure AD object ID '{aadId}' in request.");
+
+            var user = new User
+            {
+                AzureAadId = aadId,
+                Email = email,
+                Name = name,
+                RoleId = dto.RoleId,
+                DistrictId = dto.DistrictId,
+                BlockId = dto.BlockId,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Users.Add(user);
+            users.Add(user);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = user.Id }, MapToDto(user));
+        if (dtoList.Count == 1)
+            return CreatedAtAction(nameof(GetById), new { id = users[0].Id }, MapToDto(users[0]));
+
+        return Ok(users.Select(MapToDto));
     }
 
     [HttpPut("{id}")]
@@ -85,8 +119,21 @@ public class UsersController : ControllerBase
         if (user == null)
             return NotFound();
 
-        user.Email = dto.Email;
-        user.Name = dto.Name;
+        var email = dto.Email?.Trim() ?? string.Empty;
+        var name = dto.Name?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest("Email is required.");
+
+        if (string.IsNullOrWhiteSpace(name))
+            return BadRequest("Name is required.");
+
+        var users = await _unitOfWork.Users.GetAll();
+        if (users.Any(u => u.Id != id && string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase)))
+            return BadRequest("A user with this email already exists.");
+
+        user.Email = email;
+        user.Name = name;
         user.RoleId = dto.RoleId;
         user.DistrictId = dto.DistrictId;
         user.BlockId = dto.BlockId;

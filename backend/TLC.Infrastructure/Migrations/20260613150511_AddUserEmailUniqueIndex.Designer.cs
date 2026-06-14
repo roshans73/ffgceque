@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TLC.Infrastructure;
 
@@ -10,9 +11,11 @@ using TLC.Infrastructure;
 namespace TLC.Infrastructure.Migrations
 {
     [DbContext(typeof(TLCDbContext))]
-    partial class TLCDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260613150511_AddUserEmailUniqueIndex")]
+    partial class AddUserEmailUniqueIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.8");
@@ -500,6 +503,7 @@ namespace TLC.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("AzureAadId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("BlockId")

@@ -37,19 +37,29 @@ public class DistrictsController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "TechMETeam")]
-    public async Task<ActionResult<DistrictDto>> Create(CreateDistrictDto dto)
+    public async Task<IActionResult> Create(IEnumerable<CreateDistrictDto> dtos)
     {
-        var district = new District
-        {
-            Code = dto.Code,
-            Name = dto.Name,
-            ShortForm = dto.ShortForm
-        };
+        var dtoList = dtos.ToList();
+        var districts = new List<District>();
 
-        await _unitOfWork.Districts.Add(district);
+        foreach (var dto in dtoList)
+        {
+            var district = new District
+            {
+                Code = dto.Code,
+                Name = dto.Name,
+                ShortForm = dto.ShortForm
+            };
+            await _unitOfWork.Districts.Add(district);
+            districts.Add(district);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = district.Id }, MapToDto(district));
+        if (dtoList.Count == 1)
+            return CreatedAtAction(nameof(GetById), new { id = districts[0].Id }, MapToDto(districts[0]));
+
+        return Ok(districts.Select(MapToDto));
     }
 
     [HttpPut("{id}")]
@@ -120,19 +130,29 @@ public class BlocksController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "TechMETeam")]
-    public async Task<ActionResult<BlockDto>> Create(CreateBlockDto dto)
+    public async Task<IActionResult> Create(IEnumerable<CreateBlockDto> dtos)
     {
-        var block = new Block
-        {
-            DistrictId = dto.DistrictId,
-            Code = dto.Code,
-            Name = dto.Name
-        };
+        var dtoList = dtos.ToList();
+        var blocks = new List<Block>();
 
-        await _unitOfWork.Blocks.Add(block);
+        foreach (var dto in dtoList)
+        {
+            var block = new Block
+            {
+                DistrictId = dto.DistrictId,
+                Code = dto.Code,
+                Name = dto.Name
+            };
+            await _unitOfWork.Blocks.Add(block);
+            blocks.Add(block);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetAll), MapToDto(block));
+        if (dtoList.Count == 1)
+            return CreatedAtAction(nameof(GetAll), MapToDto(blocks[0]));
+
+        return Ok(blocks.Select(MapToDto));
     }
 
     private static BlockDto MapToDto(Block block)
@@ -175,21 +195,31 @@ public class CoachesController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "TechMETeam")]
-    public async Task<ActionResult<CoachDto>> Create(CreateCoachDto dto)
+    public async Task<IActionResult> Create(IEnumerable<CreateCoachDto> dtos)
     {
-        var coach = new Coach
-        {
-            DistrictId = dto.DistrictId,
-            BlockId = dto.BlockId,
-            EmpNo = dto.EmpNo,
-            Name = dto.Name,
-            CreatedAt = DateTime.UtcNow
-        };
+        var dtoList = dtos.ToList();
+        var coaches = new List<Coach>();
 
-        await _unitOfWork.Coaches.Add(coach);
+        foreach (var dto in dtoList)
+        {
+            var coach = new Coach
+            {
+                DistrictId = dto.DistrictId,
+                BlockId = dto.BlockId,
+                EmpNo = dto.EmpNo,
+                Name = dto.Name,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _unitOfWork.Coaches.Add(coach);
+            coaches.Add(coach);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetAll), MapToDto(coach));
+        if (dtoList.Count == 1)
+            return CreatedAtAction(nameof(GetAll), MapToDto(coaches[0]));
+
+        return Ok(coaches.Select(MapToDto));
     }
 
     private static CoachDto MapToDto(Coach coach)
