@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import apiClient from '../services/apiClient';
 import type { User } from '../types';
 
@@ -61,12 +62,16 @@ const LoginPage: React.FC = () => {
       const { token, user } = response.data as { token: string; user: User };
       login(token, user);
       navigate('/dashboard');
-    } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 401) {
-        setError('No account found with these credentials. Please check your email and password and try again.');
-      } else if (status === 400) {
-        setError(err?.response?.data?.message || 'Email and password are required.');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 401) {
+          setError('No account found with these credentials. Please check your email and password and try again.');
+        } else if (status === 400) {
+          setError((err.response?.data as { message?: string })?.message || 'Email and password are required.');
+        } else {
+          setError('Unable to sign in right now. Please try again later.');
+        }
       } else {
         setError('Unable to sign in right now. Please try again later.');
       }
