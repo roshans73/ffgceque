@@ -138,6 +138,10 @@ class ApiClient {
       params: { districtId, blockId },
     });
 
+  // Auth APIs
+  login = (email: string, password: string) =>
+    this.instance.post('/auth/login', { email, password });
+
   // User Management APIs
   getUsers = () => this.instance.get('/users');
   createUser = (data: unknown) => this.instance.post('/users', data);
