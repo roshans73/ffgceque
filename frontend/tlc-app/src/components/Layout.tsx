@@ -219,8 +219,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         active={isActive('/reports')}
         onNavigate={go}
         items={[
-          { label: 'Year-End Summary',      path: '/reports/yearend' },
-          { label: 'Longitudinal Analysis', path: '/reports/longitudinal' },
+          { label: 'Year-End Summary',            path: '/reports/yearend' },
+          { label: 'Longitudinal Analysis',       path: '/reports/longitudinal' },
+          { label: 'Teacher Leader Formation',    path: '/reports/teacherleader-formation' },
         ]}
       />
 
@@ -330,6 +331,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </ListItemButton>
             <ListItemButton sx={{ pl: 4 }} onClick={() => go('/reports/longitudinal')}>
               <ListItemText primary="Longitudinal Analysis" />
+            </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }} onClick={() => go('/reports/teacherleader-formation')}>
+              <ListItemText primary="Teacher Leader Formation" />
             </ListItemButton>
           </List>
         </Collapse>

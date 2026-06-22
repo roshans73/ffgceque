@@ -47,26 +47,26 @@ class ApiClient {
   // Master Data APIs
   getDistricts = () => this.instance.get('/districts');
   getDistrictById = (id: number) => this.instance.get(`/districts/${id}`);
-  createDistrict = (data: any) => this.instance.post('/districts', data);
+  createDistrict = (data: any) => this.instance.post('/districts', [data]);
   updateDistrict = (id: number, data: any) => this.instance.put(`/districts/${id}`, data);
   deleteDistrict = (id: number) => this.instance.delete(`/districts/${id}`);
 
   getBlocks = (districtId?: number) =>
     this.instance.get('/blocks', { params: { districtId } });
-  createBlock = (data: any) => this.instance.post('/blocks', data);
+  createBlock = (data: any) => this.instance.post('/blocks', [data]);
 
   getCoaches = (districtId?: number, blockId?: number) =>
     this.instance.get('/coaches', { params: { districtId, blockId } });
-  createCoach = (data: any) => this.instance.post('/coaches', data);
+  createCoach = (data: any) => this.instance.post('/coaches', [data]);
 
   getTeachers = () => this.instance.get('/teachers');
   getTeachersByGroup = (groupId: number) =>
     this.instance.get(`/teachers?groupId=${groupId}`);
-  createTeacher = (data: unknown) => this.instance.post('/teachers', data);
+  createTeacher = (data: unknown) => this.instance.post('/teachers', [data]);
 
   getTLCGroups = () => this.instance.get('/tlcgroups');
   getTLCGroupById = (id: number) => this.instance.get(`/tlcgroups/${id}`);
-  createTLCGroup = (data: any) => this.instance.post('/tlcgroups', data);
+  createTLCGroup = (data: any) => this.instance.post('/tlcgroups', [data]);
 
   getTLCMembers = (groupId: number) =>
     this.instance.get(`/tlcgroups/${groupId}/members`);
@@ -124,15 +124,15 @@ class ApiClient {
     this.instance.get('/tlcandmasterclass', { params });
 
   createTLCAndMasterclass = (data: unknown) =>
-    this.instance.post('/tlcandmasterclass', data);
+    this.instance.post('/tlcandmasterclass', [data]);
 
   updateTLCAndMasterclass = (id: number, data: unknown) =>
     this.instance.put(`/tlcandmasterclass/${id}`, data);
 
   // Analytics APIs
-  getDashboardKpis = (districtId?: number, blockId?: number) =>
+  getDashboardKpis = (districtId?: number, blockId?: number, startDate?: string, endDate?: string) =>
     this.instance.get('/analytics/dashboard', {
-      params: { districtId, blockId }
+      params: { districtId, blockId, startDate, endDate }
     });
 
   getYearEndSummary = (districtId?: number, blockId?: number, year?: number) =>
@@ -148,9 +148,20 @@ class ApiClient {
       params: { districtId, blockId },
     });
 
+  getTeacherLeaderFormationReport = (districtId?: number, blockId?: number) =>
+    this.instance.get('/analytics/teacherleader-formation', {
+      params: { districtId, blockId },
+    });
+
+  downloadTeacherLeaderFormationReport = (districtId?: number, blockId?: number) =>
+    this.instance.get('/analytics/teacherleader-formation', {
+      params: { districtId, blockId, format: 'csv' },
+      responseType: 'blob',
+    });
+
   // User Management APIs
   getUsers = () => this.instance.get('/users');
-  createUser = (data: unknown) => this.instance.post('/users', data);
+  createUser = (data: unknown) => this.instance.post('/users', [data]);
   updateUser = (id: number, data: unknown) => this.instance.put(`/users/${id}`, data);
   activateUser   = (id: number) => this.instance.patch(`/users/${id}/activate`);
   deactivateUser = (id: number) => this.instance.patch(`/users/${id}/deactivate`);
