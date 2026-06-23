@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f2044"/>
+  <rect x="80" y="180" width="352" height="200" rx="16" fill="none" stroke="#f59e0b" stroke-width="20"/>
+  <line x1="80" y1="240" x2="432" y2="240" stroke="#f59e0b" stroke-width="20"/>
+  <line x1="192" y1="180" x2="192" y2="380" stroke="#f59e0b" stroke-width="20"/>
+  <text x="136" y="350" text-anchor="middle" font-size="80" font-weight="bold" fill="#f59e0b" font-family="Arial">T</text>
+  <text x="312" y="220" text-anchor="middle" font-size="52" fill="#f59e0b" font-family="Arial" font-weight="bold">TLC</text>
+  <circle cx="270" cy="310" r="10" fill="#f59e0b"/>
+  <circle cx="310" cy="310" r="10" fill="#f59e0b"/>
+  <circle cx="350" cy="310" r="10" fill="#f59e0b"/>
+  <circle cx="390" cy="310" r="10" fill="#f59e0b"/>
+</svg>
