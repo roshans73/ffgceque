@@ -47,17 +47,17 @@ class ApiClient {
   // Master Data APIs
   getDistricts = () => this.instance.get('/districts');
   getDistrictById = (id: number) => this.instance.get(`/districts/${id}`);
-  createDistrict = (data: any) => this.instance.post('/districts', [data]);
-  updateDistrict = (id: number, data: any) => this.instance.put(`/districts/${id}`, data);
+  createDistrict = (data: unknown) => this.instance.post('/districts', [data]);
+  updateDistrict = (id: number, data: unknown) => this.instance.put(`/districts/${id}`, data);
   deleteDistrict = (id: number) => this.instance.delete(`/districts/${id}`);
 
   getBlocks = (districtId?: number) =>
     this.instance.get('/blocks', { params: { districtId } });
-  createBlock = (data: any) => this.instance.post('/blocks', [data]);
+  createBlock = (data: unknown) => this.instance.post('/blocks', [data]);
 
   getCoaches = (districtId?: number, blockId?: number) =>
     this.instance.get('/coaches', { params: { districtId, blockId } });
-  createCoach = (data: any) => this.instance.post('/coaches', [data]);
+  createCoach = (data: unknown) => this.instance.post('/coaches', [data]);
 
   getTeachers = () => this.instance.get('/teachers');
   getTeachersByGroup = (groupId: number) =>
@@ -66,7 +66,7 @@ class ApiClient {
 
   getTLCGroups = () => this.instance.get('/tlcgroups');
   getTLCGroupById = (id: number) => this.instance.get(`/tlcgroups/${id}`);
-  createTLCGroup = (data: any) => this.instance.post('/tlcgroups', [data]);
+  createTLCGroup = (data: unknown) => this.instance.post('/tlcgroups', [data]);
 
   getTLCMembers = (groupId: number) =>
     this.instance.get(`/tlcgroups/${groupId}/members`);
@@ -113,10 +113,10 @@ class ApiClient {
   };
 
   // Attendance APIs
-  recordTLCAttendance = (data: any) =>
+  recordTLCAttendance = (data: unknown) =>
     this.instance.post('/attendance/tlc', data);
 
-  recordMasterclassAttendance = (data: any) =>
+  recordMasterclassAttendance = (data: unknown) =>
     this.instance.post('/attendance/masterclass', data);
 
   // TLC & Masterclass Events
@@ -158,6 +158,10 @@ class ApiClient {
       params: { districtId, blockId, format: 'csv' },
       responseType: 'blob',
     });
+
+  // Auth APIs
+  login = (email: string, password: string) =>
+    this.instance.post('/auth/login', { email, password });
 
   // User Management APIs
   getUsers = () => this.instance.get('/users');

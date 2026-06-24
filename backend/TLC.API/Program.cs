@@ -1,9 +1,11 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
-using TLC.API.Authentication;
+using Microsoft.IdentityModel.Tokens;
 using TLC.API.Middleware;
+using TLC.API.Services;
 using TLC.Core.Services;
 using TLC.Infrastructure;
 using TLC.Infrastructure.Repositories;
@@ -24,27 +26,73 @@ builder.Services.AddDbContext<TLCDbContext>(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICodeGeneratorService, CodeGeneratorService>();
 builder.Services.AddScoped<IImportService, ImportService>();
+builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-// Add Authentication
-var useAzureAd = !string.IsNullOrWhiteSpace(builder.Configuration["AzureAd:ClientId"]) &&
-                 builder.Configuration["AzureAd:ClientId"] != "your-client-id" &&
-                 !string.IsNullOrWhiteSpace(builder.Configuration["AzureAd:TenantId"]);
+// Add JWT authentication for the local DB-backed login (api/auth/login)
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSection["Key"]!;
+var jwtIssuer = jwtSection["Issuer"]!;
+var jwtAudience = jwtSection["Audience"]!;
 
-if (useAzureAd)
+void ConfigureLocalJwtBearer(JwtBearerOptions options)
 {
-    builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, "AzureAd");
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromMinutes(2)
+    };
+}
+
+if (!builder.Environment.IsDevelopment())
+{
+    const string LocalJwtScheme = "LocalJwt";
+
+    builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = "AzureAdOrLocalJwt";
+            options.DefaultChallengeScheme = "AzureAdOrLocalJwt";
+        })
+        .AddPolicyScheme("AzureAdOrLocalJwt", "Azure AD or Local JWT", options =>
+        {
+            options.ForwardDefaultSelector = context =>
+            {
+                var authHeader = context.Request.Headers.Authorization.ToString();
+                if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    var token = authHeader["Bearer ".Length..].Trim();
+                    try
+                    {
+                        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+                        if (jwt.Issuer == jwtIssuer)
+                            return LocalJwtScheme;
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Not a well-formed JWT - fall through to Azure AD scheme.
+                    }
+                }
+                return JwtBearerDefaults.AuthenticationScheme;
+            };
+        })
+        .AddJwtBearer(LocalJwtScheme, ConfigureLocalJwtBearer)
+        .AddMicrosoftIdentityWebApi(builder.Configuration);
+
+    builder.Services.AddAuthorization();
 }
 else
 {
-    builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = "Development";
-        options.DefaultChallengeScheme = "Development";
-        options.DefaultScheme = "Development";
-    }).AddScheme<AuthenticationSchemeOptions, DevelopmentAuthenticationHandler>("Development", options => { });
-}
+    // Development: accept the local JWT issued by /api/auth/login.
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(ConfigureLocalJwtBearer);
 
-builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization();
+}
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -71,28 +119,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");
 
-if (app.Environment.IsDevelopment())
-{
-    app.Use(async (context, next) =>
-    {
-        if (context.User?.Identity?.IsAuthenticated != true)
-        {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Name, "dev-user"),
-                new Claim(ClaimTypes.Role, "TechMETeam"),
-                new Claim(ClaimTypes.Role, "TLCManager"),
-                new Claim(ClaimTypes.Role, "SustainabilityLead")
-            };
-            context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Development"));
-        }
-
-        await next();
-    });
-}
-
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
