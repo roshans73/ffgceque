@@ -96,6 +96,25 @@ export interface DashboardKpis {
   masterclassesHeld: number;
 }
 
+export interface AttendanceReportEntry {
+  teacherId: number;
+  teacherName: string;
+  school?: string;
+  tlcsAttended: number;
+  percentOfTotal: number; // 0-100
+}
+
+// Extended KPIs requested by the Main Dashboard
+export interface ExtendedDashboardKpis extends DashboardKpis {
+  tipTeachersAttendedAtLeastOne: number;
+  nonTipTeachersAttendedAtLeastOne: number;
+  tlcMeetsHeld: number;
+  percentTeachersMin3: number; // percent of teachers who have attended >=3
+  uniqueTeachers60PercentOrMore: number;
+  avgTeachersPerMasterclass: number;
+  attendanceReport: AttendanceReportEntry[];
+}
+
 export interface AttendanceEntry {
   district: District;
   block: Block;
@@ -117,4 +136,17 @@ export interface AttendeeEntry {
   isTipTeacher: boolean;
   yearsInTip?: number;
   coachId?: number;
+}
+
+export interface TeacherLeaderFormation {
+  teacherLeaderId: number;
+  teacherId: number;
+  teacherName: string;
+  school: string;
+  tlcGroupId: number;
+  tlcGroupCode: string;
+  dateFormed: string;
+  district: string;
+  block: string;
+  teacherLeaderCreatedAt: string;
 }

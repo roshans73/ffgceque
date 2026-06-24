@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -22,12 +22,12 @@ import {
   TableRow,
   TextField,
   Typography,
-} from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
-import { Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
-import apiClient from '../services/apiClient';
-import type { TLCGroup, District, Block, Teacher } from '../types';
-import BulkUploadDialog from '../components/BulkUploadDialog';
+} from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material";
+import { Add as AddIcon, Upload as UploadIcon } from "@mui/icons-material";
+import apiClient from "../services/apiClient";
+import type { TLCGroup, District, Block, Teacher } from "../types";
+import BulkUploadDialog from "../components/BulkUploadDialog";
 
 interface TLCGroupForm {
   districtId: string;
@@ -39,58 +39,66 @@ interface TLCGroupForm {
 }
 
 const EMPTY_FORM: TLCGroupForm = {
-  districtId: '', blockId: '', location: '',
-  dateFormed: '', teacherLeaderId: '', groupShortForm: '',
+  districtId: "",
+  blockId: "",
+  location: "",
+  dateFormed: "",
+  teacherLeaderId: "",
+  groupShortForm: "",
 };
 
 const TLCGroupsPage: React.FC = () => {
-  const [groups,         setGroups]         = useState<TLCGroup[]>([]);
-  const [districts,      setDistricts]      = useState<District[]>([]);
-  const [filterBlocks,   setFilterBlocks]   = useState<Block[]>([]);
-  const [formBlocks,     setFormBlocks]     = useState<Block[]>([]);
-  const [teachers,       setTeachers]       = useState<Teacher[]>([]);
-  const [filterDistrict, setFilterDistrict] = useState('');
-  const [filterBlock,    setFilterBlock]    = useState('');
-  const [loading,        setLoading]        = useState(true);
+  const [groups, setGroups] = useState<TLCGroup[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [formBlocks, setFormBlocks] = useState<Block[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const districtName = (id: number) =>
+    districts.find((d) => d.id === id)?.name ?? "—";
+  const teacherName = (id: number) =>
+    teachers.find((t) => t.id === id)?.name ?? "—";
+  // Short form is the suffix of the auto-generated code (format XXnn-YY)
+  const shortForm = (code: string) => code.split("-")[1] ?? "—";
 
   // Add dialog
-  const [addOpen,   setAddOpen]   = useState(false);
-  const [saving,    setSaving]    = useState(false);
-  const [formError, setFormError] = useState('');
-  const [form,      setForm]      = useState<TLCGroupForm>(EMPTY_FORM);
+  const [addOpen, setAddOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [form, setForm] = useState<TLCGroupForm>(EMPTY_FORM);
 
   // Upload dialog
   const [uploadOpen, setUploadOpen] = useState(false);
 
   useEffect(() => {
-    apiClient.getDistricts().then((r) => setDistricts(r.data)).catch(console.error);
-    apiClient.getTeachers().then((r) => setTeachers(r.data)).catch(console.error);
+    apiClient
+      .getDistricts()
+      .then((r) => setDistricts(r.data))
+      .catch(console.error);
+    apiClient
+      .getTeachers()
+      .then((r) => setTeachers(r.data))
+      .catch(console.error);
   }, []);
 
-  useEffect(() => { loadGroups(); }, [filterDistrict, filterBlock]);
+  useEffect(() => {
+    loadGroups();
+  }, []);
 
   const loadGroups = async () => {
     setLoading(true);
     try {
       const r = await apiClient.getTLCGroups();
       setGroups(r.data);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  };
-
-  const handleFilterDistrictChange = async (e: SelectChangeEvent) => {
-    setFilterDistrict(e.target.value);
-    setFilterBlock('');
-    if (e.target.value) {
-      const r = await apiClient.getBlocks(Number(e.target.value));
-      setFilterBlocks(r.data);
-    } else {
-      setFilterBlocks([]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleFormDistrictChange = async (e: SelectChangeEvent) => {
-    setForm((p) => ({ ...p, districtId: e.target.value, blockId: '' }));
+    setForm((p) => ({ ...p, districtId: e.target.value, blockId: "" }));
     if (e.target.value) {
       const r = await apiClient.getBlocks(Number(e.target.value));
       setFormBlocks(r.data);
@@ -101,59 +109,84 @@ const TLCGroupsPage: React.FC = () => {
 
   const openAdd = () => {
     setForm(EMPTY_FORM);
-    setFormError('');
+    setFormError("");
     setFormBlocks([]);
     setAddOpen(true);
   };
 
   const handleSave = async () => {
-    const { districtId, blockId, location, dateFormed, teacherLeaderId, groupShortForm } = form;
-    if (!districtId || !blockId || !location.trim() || !dateFormed || !teacherLeaderId || !groupShortForm.trim()) {
-      setFormError('All fields are required');
+    const {
+      districtId,
+      blockId,
+      location,
+      dateFormed,
+      teacherLeaderId,
+      groupShortForm,
+    } = form;
+    if (
+      !districtId ||
+      !blockId ||
+      !location.trim() ||
+      !dateFormed ||
+      !teacherLeaderId ||
+      !groupShortForm.trim()
+    ) {
+      setFormError("All fields are required");
       return;
     }
     if (groupShortForm.trim().length < 2) {
-      setFormError('Group short form must be at least 2 characters');
+      setFormError("Group short form must be at least 2 characters");
       return;
     }
     setSaving(true);
-    setFormError('');
+    setFormError("");
     try {
       await apiClient.createTLCGroup({
-        districtId:      Number(districtId),
-        blockId:         Number(blockId),
-        location:        location.trim(),
+        districtId: Number(districtId),
+        blockId: Number(blockId),
+        location: location.trim(),
         dateFormed,
         teacherLeaderId: Number(teacherLeaderId),
-        groupShortForm:  groupShortForm.trim().toUpperCase(),
+        groupShortForm: groupShortForm.trim().toUpperCase(),
       });
       setAddOpen(false);
       loadGroups();
-    } catch {
-      setFormError('Failed to save TLC group. The group code may conflict with an existing one.');
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to save TLC group. The group code may conflict with an existing one.";
+      setFormError(errorMsg);
     } finally {
       setSaving(false);
     }
   };
 
-  const filtered = groups.filter((g) => {
-    if (filterDistrict && g.districtId !== Number(filterDistrict)) return false;
-    if (filterBlock    && g.blockId    !== Number(filterBlock))    return false;
-    return true;
-  });
-
   return (
     <Box>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>TLC Groups</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            TLC Groups
+          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Manage TLC group records — add individually or import from Excel
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setUploadOpen(true)}>
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <Button
+            variant="outlined"
+            startIcon={<UploadIcon />}
+            onClick={() => setUploadOpen(true)}
+          >
             Upload Excel
           </Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openAdd}>
@@ -162,59 +195,53 @@ const TLCGroupsPage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Filters */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>District</InputLabel>
-          <Select value={filterDistrict} label="District" onChange={handleFilterDistrictChange}>
-            <MenuItem value="">All Districts</MenuItem>
-            {districts.map((d) => (
-              <MenuItem key={d.id} value={String(d.id)}>{d.name}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {filterDistrict && (
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Block</InputLabel>
-            <Select value={filterBlock} label="Block"
-              onChange={(e: SelectChangeEvent) => setFilterBlock(e.target.value)}>
-              <MenuItem value="">All Blocks</MenuItem>
-              {filterBlocks.map((b) => (
-                <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-      </Box>
-
       {/* Table */}
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 6 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", my: 6 }}>
           <CircularProgress />
         </Box>
       ) : (
         <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'grey.50' } }}>
+              <TableRow
+                sx={{ "& th": { fontWeight: 700, bgcolor: "grey.50" } }}
+              >
                 <TableCell>Group Code</TableCell>
+                <TableCell>District</TableCell>
+                <TableCell>Group Short Form</TableCell>
+                <TableCell>Teacher Leader</TableCell>
                 <TableCell>Location</TableCell>
                 <TableCell>Date Formed</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filtered.map((g) => (
-                <TableRow key={g.id} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                  <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600 }}>{g.tlcGroupCode}</TableCell>
+              {groups.map((g) => (
+                <TableRow
+                  key={g.id}
+                  sx={{ "&:hover": { bgcolor: "action.hover" } }}
+                >
+                  <TableCell sx={{ fontFamily: "monospace", fontWeight: 600 }}>
+                    {g.tlcGroupCode}
+                  </TableCell>
+                  <TableCell>{districtName(g.districtId)}</TableCell>
+                  <TableCell sx={{ fontFamily: "monospace" }}>
+                    {shortForm(g.tlcGroupCode)}
+                  </TableCell>
+                  <TableCell>{teacherName(g.teacherLeaderId)}</TableCell>
                   <TableCell>{g.location}</TableCell>
-                  <TableCell sx={{ color: 'text.secondary' }}>
+                  <TableCell sx={{ color: "text.secondary" }}>
                     {new Date(g.dateFormed).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {groups.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  <TableCell
+                    colSpan={6}
+                    align="center"
+                    sx={{ py: 4, color: "text.secondary" }}
+                  >
                     No TLC groups found
                   </TableCell>
                 </TableRow>
@@ -225,41 +252,70 @@ const TLCGroupsPage: React.FC = () => {
       )}
 
       {/* ── Add TLC Group dialog ── */}
-      <Dialog open={addOpen} onClose={() => setAddOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>Add TLC Group</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Add TLC Group
+          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            The group code is auto-generated from the district and short form you enter.
+            The group code is auto-generated from the district and short form
+            you enter.
           </Typography>
         </DialogTitle>
         <Divider />
         <DialogContent sx={{ pt: 2.5 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
             {formError && <Alert severity="error">{formError}</Alert>}
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: "flex", gap: 2 }}>
               <FormControl fullWidth required>
                 <InputLabel>District</InputLabel>
-                <Select value={form.districtId} label="District" onChange={handleFormDistrictChange}>
+                <Select
+                  value={form.districtId}
+                  label="District"
+                  onChange={handleFormDistrictChange}
+                >
                   {districts.map((d) => (
-                    <MenuItem key={d.id} value={String(d.id)}>{d.name}</MenuItem>
+                    <MenuItem key={d.id} value={String(d.id)}>
+                      {d.name}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
               <FormControl fullWidth required>
                 <InputLabel>Block</InputLabel>
-                <Select value={form.blockId} label="Block" disabled={!form.districtId}
-                  onChange={(e: SelectChangeEvent) => setForm((p) => ({ ...p, blockId: e.target.value }))}>
+                <Select
+                  value={form.blockId}
+                  label="Block"
+                  disabled={!form.districtId}
+                  onChange={(e: SelectChangeEvent) =>
+                    setForm((p) => ({ ...p, blockId: e.target.value }))
+                  }
+                >
                   {formBlocks.map((b) => (
-                    <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
+                    <MenuItem key={b.id} value={String(b.id)}>
+                      {b.name}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label="Location" value={form.location} required sx={{ flex: 1 }}
-                onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))} />
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <TextField
+                label="Location"
+                value={form.location}
+                required
+                sx={{ flex: 1 }}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, location: e.target.value }))
+                }
+              />
               <TextField
                 label="Date Formed"
                 type="date"
@@ -267,7 +323,9 @@ const TLCGroupsPage: React.FC = () => {
                 required
                 sx={{ width: 180 }}
                 slotProps={{ inputLabel: { shrink: true } }}
-                onChange={(e) => setForm((p) => ({ ...p, dateFormed: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, dateFormed: e.target.value }))
+                }
               />
             </Box>
 
@@ -277,17 +335,35 @@ const TLCGroupsPage: React.FC = () => {
               required
               placeholder="e.g. AL"
               helperText="2-letter identifier appended to the auto-generated group code"
-              onChange={(e) => setForm((p) => ({ ...p, groupShortForm: e.target.value.toUpperCase().slice(0, 4) }))}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  groupShortForm: e.target.value.toUpperCase().slice(0, 4),
+                }))
+              }
               fullWidth
             />
 
             <FormControl fullWidth required>
               <InputLabel>Teacher Leader</InputLabel>
-              <Select value={form.teacherLeaderId} label="Teacher Leader"
-                onChange={(e: SelectChangeEvent) => setForm((p) => ({ ...p, teacherLeaderId: e.target.value }))}>
+              <Select
+                value={form.teacherLeaderId}
+                label="Teacher Leader"
+                onChange={(e: SelectChangeEvent) =>
+                  setForm((p) => ({ ...p, teacherLeaderId: e.target.value }))
+                }
+              >
                 {teachers.map((t) => (
                   <MenuItem key={t.id} value={String(t.id)}>
-                    {t.name} <Typography component="span" sx={{ ml: 1, fontSize: '0.75rem', color: 'text.secondary' }}>
+                    {t.name}{" "}
+                    <Typography
+                      component="span"
+                      sx={{
+                        ml: 1,
+                        fontSize: "0.75rem",
+                        color: "text.secondary",
+                      }}
+                    >
                       {t.teacherCode}
                     </Typography>
                   </MenuItem>
@@ -298,14 +374,20 @@ const TLCGroupsPage: React.FC = () => {
         </DialogContent>
         <Divider />
         <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-          <Button onClick={() => setAddOpen(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={() => setAddOpen(false)} disabled={saving}>
+            Cancel
+          </Button>
           <Button
             variant="contained"
             onClick={handleSave}
             disabled={saving}
-            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}
+            startIcon={
+              saving ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : undefined
+            }
           >
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? "Saving…" : "Save"}
           </Button>
         </DialogActions>
       </Dialog>

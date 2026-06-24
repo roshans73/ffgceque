@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>CEQUE TLC – Entity Relationship Diagram</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #58a6ff;
+      font-size: 1.45rem;
+      margin-bottom: 5px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #8b949e;
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+    }
+
+    /* ── Legend ──────────────────────────────────────── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 5px 13px;
+      font-size: 0.78rem;
+      color: #c9d1d9;
+    }
+    .legend-dot {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* ── Diagram scroll wrapper ───────────────────────── */
+    .diagram-wrapper {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px;
+      overflow: auto;
+    }
+    #diagram {
+      position: relative;
+      /* width/height set by JS */
+    }
+    #rel-svg {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* ── Entity box ──────────────────────────────────── */
+    .entity {
+      position: absolute;
+      width: 238px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1.5px solid var(--border);
+      box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+      font-size: 11.5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+    .entity-header {
+      background: var(--header);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 12.5px;
+      padding: 7px 10px;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid var(--border);
+    }
+    .entity-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      padding: 2px 8px 2px 10px;
+      gap: 6px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      min-height: 22px;
+    }
+    .entity-row:nth-child(odd)  { background: var(--body-even); }
+    .entity-row:nth-child(even) { background: var(--body-odd);  }
+    .col-name { color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .col-type { color: #8b949e; font-size: 10.5px; white-space: nowrap; }
+    .col-key  { font-size: 10px; font-weight: 700; min-width: 18px; text-align: right; }
+    .pk { color: #f0b429; }
+    .fk { color: #79c0ff; }
+    .uk { color: #56d364; }
+
+    /* ── Relationship lines ──────────────────────────── */
+    .rel-line { fill: none; stroke: #444c56; stroke-width: 1.4; }
+    .rel-label {
+      fill: #6e7681;
+      font-size: 9.5px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+
+    /* ── Footer ──────────────────────────────────────── */
+    .footnote {
+      text-align: center;
+      color: #6e7681;
+      font-size: 0.73rem;
+      margin-top: 14px;
+      line-height: 1.7;
+    }
+    .footnote code {
+      background: #21262d;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #79c0ff;
+      font-size: 0.71rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>CEQUE Teacher Learning Circles (TLC) — Entity Relationship Diagram</h1>
+<p class="subtitle">MS SQL Server &nbsp;|&nbsp; 14 tables &nbsp;|&nbsp; All PKs, FKs, key business columns</p>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#1c4e80;border:1.5px solid #58a6ff;"></div>
+    Reference / Lookup
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#1a3d2b;border:1.5px solid #3fb950;"></div>
+    Master Data
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#3d2f00;border:1.5px solid #d29922;"></div>
+    Transactional / Events
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#3d0f14;border:1.5px solid #f85149;"></div>
+    Planning &amp; Targets
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#2d1e4f;border:1.5px solid #a371f7;"></div>
+    Access Control
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#3d2200;border:1.5px solid #e3892b;"></div>
+    System / Utility
+  </div>
+</div>
+
+<div class="diagram-wrapper">
+  <div id="diagram">
+    <svg id="rel-svg"></svg>
+  </div>
+</div>
+
+<p class="footnote">
+  * Deferred FK — <code>TLCGroup.TeacherLeaderID → TeacherLeader</code> and
+  <code>Teacher.TLCGroupID → TLCGroup</code> added via ALTER TABLE to avoid circular forward-references.<br>
+  <strong>PK</strong> = Primary Key &nbsp; <strong style="color:#79c0ff">FK</strong> = Foreign Key &nbsp;
+  <strong style="color:#56d364">UK</strong> = Unique Key
+</p>
+
+<script>
+// ── Colour groups (match legend exactly) ─────────────────────────────────────
+const G = {
+  ref:  { header:'#1c4e80', bodyEven:'#112236', bodyOdd:'#0d1b2e', border:'#58a6ff' },
+  mst:  { header:'#1a3d2b', bodyEven:'#0f2419', bodyOdd:'#0a1d13', border:'#3fb950' },
+  txn:  { header:'#3d2f00', bodyEven:'#251d00', bodyOdd:'#1c1500', border:'#d29922' },
+  pln:  { header:'#3d0f14', bodyEven:'#260a0d', bodyOdd:'#1c0709', border:'#f85149' },
+  acc:  { header:'#2d1e4f', bodyEven:'#1e1433', bodyOdd:'#180f2a', border:'#a371f7' },
+  sys:  { header:'#3d2200', bodyEven:'#261600', bodyOdd:'#1e1000', border:'#e3892b' },
+};
+
+// ── Entity definitions ────────────────────────────────────────────────────────
+// Each field: [name, type, key?]   key = 'PK' | 'FK' | 'UK' | ''
+const ENTITIES = [
+  { id:'District', g:G.ref, fields:[
+    ['DistrictID','int','PK'], ['DistrictCode','char(2)','UK'], ['DistrictName','nvarchar(100)','UK'],
+    ['CreatedAt','datetime2',''], ['UpdatedAt','datetime2',''] ]},
+
+  { id:'Block', g:G.ref, fields:[
+    ['BlockID','int','PK'], ['DistrictID','int','FK'], ['BlockName','nvarchar(100)',''],
+    ['CreatedAt','datetime2',''], ['UpdatedAt','datetime2',''] ]},
+
+  { id:'UserRole', g:G.acc, fields:[
+    ['RoleID','int','PK'], ['RoleName','varchar(30)','UK'], ['RoleDescription','nvarchar(200)',''],
+    ['CanViewReports','bit',''], ['CanEditAllMasters','bit',''],
+    ['CanCreateMasterclass','bit',''], ['CanEnterAttendance','bit',''] ]},
+
+  { id:'AppUser', g:G.acc, fields:[
+    ['UserID','int','PK'], ['Username','varchar(50)','UK'], ['PasswordHash','varchar(256)',''],
+    ['FullName','nvarchar(100)',''], ['Email','varchar(150)','UK'],
+    ['RoleID','int','FK'], ['DistrictID','int','FK'], ['IsActive','bit',''],
+    ['LastLoginAt','datetime2',''], ['CreatedAt','datetime2',''], ['UpdatedAt','datetime2',''] ]},
+
+  { id:'CodeSequence', g:G.sys, fields:[
+    ['SequenceKey','varchar(20)','PK'], ['CurrentSeq','int',''] ]},
+
+  { id:'Coach', g:G.mst, fields:[
+    ['CoachID','int','PK'], ['CoachEmpNo','varchar(20)','UK'], ['CoachName','nvarchar(100)',''],
+    ['DistrictID','int','FK'], ['BlockID','int','FK'], ['IsActive','bit',''],
+    ['CreatedAt','datetime2',''], ['UpdatedAt','datetime2',''] ]},
+
+  { id:'Teacher', g:G.mst, fields:[
+    ['TeacherID','int','PK'], ['TeacherCode','varchar(6)','UK'], ['TeacherName','nvarchar(100)',''],
+    ['School','nvarchar(200)',''], ['Gender','char(1)',''], ['MobileNo','varchar(15)',''],
+    ['Email','varchar(150)',''], ['IsTIPTeacher','bit',''], ['YearsInTIP','tinyint',''],
+    ['ReferredByCoachID','int','FK'], ['DistrictID','int','FK'], ['BlockID','int','FK'],
+    ['TLCGroupID','int','FK*'], ['RegistrationDate','date',''],
+    ['CreatedAt','datetime2',''], ['UpdatedAt','datetime2',''] ]},
+
+  { id:'TLCGroup', g:G.mst, fields:[
+    ['TLCGroupID','int','PK'], ['TLCGroupCode','varchar(10)','UK'], ['DistrictID','int','FK'],
+    ['BlockID','int','FK'], ['GroupShortForm','char(2)',''], ['DistrictSerial','smallint',''],
+    ['Location','nvarchar(200)',''], ['DateFormed','date',''],
+    ['TeacherLeaderID','int','FK*'], ['IsActive','bit',''],
+    ['CreatedAt','datetime2',''], ['UpdatedAt','datetime2',''] ]},
+
+  { id:'TeacherLeader', g:G.mst, fields:[
+    ['TeacherLeaderID','int','PK'], ['TLCGroupID','int','FK'], ['TeacherID','int','FK'],
+    ['AssignedDate','date',''], ['IsActive','bit',''], ['CreatedAt','datetime2',''] ]},
+
+  { id:'TLCMember', g:G.mst, fields:[
+    ['TLCMemberID','int','PK'], ['TLCGroupID','int','FK'], ['TeacherID','int','FK'],
+    ['MembershipDate','date',''], ['IsActive','bit',''], ['CreatedAt','datetime2',''] ]},
+
+  { id:'TLCEvent', g:G.txn, fields:[
+    ['TLCEventID','int','PK'], ['EventCode','varchar(15)','UK'], ['EventType','varchar(12)',''],
+    ['DistrictID','int','FK'], ['BlockID','int','FK'], ['TLCGroupID','int','FK'],
+    ['Status','varchar(10)',''], ['PlannedDate','date',''], ['ConductedDate','date',''],
+    ['LocationConducted','nvarchar(200)',''], ['StartTime','time',''], ['EndTime','time',''],
+    ['LedByTeacherID','int','FK'], ['LedByExternal','nvarchar(100)',''],
+    ['Topic','nvarchar(500)',''], ['TotalAttendance','smallint',''],
+    ['Remarks','nvarchar(500)',''], ['FinancialYear','char(7)',''],
+    ['CreatedAt','datetime2',''], ['UpdatedAt','datetime2',''] ]},
+
+  { id:'TLCAttendance', g:G.txn, fields:[
+    ['AttendanceID','int','PK'], ['TLCEventID','int','FK'], ['TeacherID','int','FK'],
+    ['TLCGroupID','int','FK'], ['AttendanceDate','date',''],
+    ['DistrictID','int','FK'], ['BlockID','int','FK'],
+    ['FinancialYear','char(7)',''], ['CreatedAt','datetime2',''] ]},
+
+  { id:'MasterclassAttendance', g:G.txn, fields:[
+    ['MasterclassAttID','int','PK'], ['TLCEventID','int','FK'], ['TeacherID','int','FK'],
+    ['AttendanceDate','date',''], ['FinancialYear','char(7)',''], ['CreatedAt','datetime2',''] ]},
+
+  { id:'BlockTarget', g:G.pln, fields:[
+    ['BlockTargetID','int','PK'], ['DistrictID','int','FK'], ['BlockID','int','FK'],
+    ['FinancialYear','char(7)',''], ['TargetTLCs','smallint',''],
+    ['CreatedAt','datetime2',''], ['UpdatedAt','datetime2',''] ]},
+];
+
+// ── Layout: column × row grid ─────────────────────────────────────────────────
+// [colIndex, rowIndex]  — rows stack within each column top-to-bottom
+const LAYOUT = {
+  District:             [0, 0],
+  Block:                [0, 1],
+  BlockTarget:          [0, 2],
+  Coach:                [1, 0],
+  Teacher:              [1, 1],
+  TLCGroup:             [2, 0],
+  TeacherLeader:        [2, 1],
+  TLCMember:            [2, 2],
+  TLCEvent:             [3, 0],
+  TLCAttendance:        [3, 1],
+  MasterclassAttendance:[4, 0],
+  UserRole:             [4, 1],
+  AppUser:              [4, 2],
+  CodeSequence:         [5, 0],
+};
+
+// ── Relationships [from, to, label] ──────────────────────────────────────────
+const RELATIONS = [
+  ['District','Block','contains'],
+  ['District','Coach','has'],
+  ['District','Teacher','registered in'],
+  ['District','TLCGroup','has'],
+  ['District','TLCEvent','held in'],
+  ['District','TLCAttendance','denorm'],
+  ['District','BlockTarget','target for'],
+  ['District','AppUser','scoped to'],
+  ['Block','Coach','has'],
+  ['Block','Teacher','registered in'],
+  ['Block','TLCGroup','has'],
+  ['Block','TLCEvent','held in'],
+  ['Block','TLCAttendance','denorm'],
+  ['Block','BlockTarget','target for'],
+  ['UserRole','AppUser','role'],
+  ['Coach','Teacher','referred'],
+  ['Teacher','TeacherLeader','leads'],
+  ['Teacher','TLCMember','member'],
+  ['Teacher','TLCEvent','led by'],
+  ['Teacher','TLCAttendance','attends'],
+  ['Teacher','MasterclassAttendance','attends'],
+  ['TLCGroup','TeacherLeader','history'],
+  ['TLCGroup','TLCMember','members'],
+  ['TLCGroup','TLCEvent','events'],
+  ['TLCGroup','TLCAttendance','denorm'],
+  ['TLCGroup','Teacher','home group'],
+  ['TeacherLeader','TLCGroup','current leader*'],
+  ['TLCEvent','TLCAttendance','attendance'],
+  ['TLCEvent','MasterclassAttendance','attendance'],
+];
+
+// ── Rendering constants ───────────────────────────────────────────────────────
+const EW   = 238;   // entity width px
+const RH   = 22;    // row height px
+const HH   = 34;    // header height px
+const COLG = 36;    // horizontal gap between columns
+const ROWG = 20;    // vertical gap between entities in same column
+
+// ── Compute entity heights ────────────────────────────────────────────────────
+function entityH(e) { return HH + e.fields.length * RH; }
+
+// ── Build position map ────────────────────────────────────────────────────────
+// First pass: compute max content height per column row
+const colMap   = {};   // colIndex → array of entity ids in order
+const posMap   = {};   // entityId → {x, y, w, h}
+
+ENTITIES.forEach(e => {
+  const [col, row] = LAYOUT[e.id];
+  if (!colMap[col]) colMap[col] = [];
+  colMap[col][row] = e.id;
+});
+
+// Compute column x positions (uniform column width)
+const colX = [];
+let cx = 20;
+const numCols = Math.max(...Object.keys(colMap).map(Number)) + 1;
+for (let c = 0; c < numCols; c++) {
+  colX[c] = cx;
+  cx += EW + COLG;
+}
+
+// Compute y positions within each column
+Object.entries(colMap).forEach(([col, ids]) => {
+  let cy = 20;
+  ids.forEach((id, row) => {
+    if (!id) { cy += 80 + ROWG; return; }  // empty slot placeholder
+    const e = ENTITIES.find(e => e.id === id);
+    const h = entityH(e);
+    posMap[id] = { x: colX[+col], y: cy, w: EW, h };
+    cy += h + ROWG;
+  });
+});
+
+// ── Canvas size ───────────────────────────────────────────────────────────────
+const canvasW = colX[numCols-1] + EW + 20;
+const canvasH = Math.max(...Object.values(posMap).map(p => p.y + p.h)) + 20;
+
+// ── Render entity boxes ───────────────────────────────────────────────────────
+const diagram = document.getElementById('diagram');
+diagram.style.width  = canvasW + 'px';
+diagram.style.height = canvasH + 'px';
+
+ENTITIES.forEach(e => {
+  const p = posMap[e.id];
+  const div = document.createElement('div');
+  div.className = 'entity';
+  div.id = 'ent-' + e.id;
+  div.style.cssText = `left:${p.x}px;top:${p.y}px;
+    --header:${e.g.header};--border:${e.g.border};
+    --body-even:${e.g.bodyEven};--body-odd:${e.g.bodyOdd};`;
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'entity-header';
+  hdr.textContent = e.id;
+  div.appendChild(hdr);
+
+  // Rows
+  e.fields.forEach(([name, type, key]) => {
+    const row = document.createElement('div');
+    row.className = 'entity-row';
+
+    const nEl = document.createElement('span');
+    nEl.className = 'col-name';
+    nEl.textContent = name;
+
+    const tEl = document.createElement('span');
+    tEl.className = 'col-type';
+    tEl.textContent = type;
+
+    const kEl = document.createElement('span');
+    kEl.className = 'col-key';
+    if (key === 'PK') { kEl.textContent = 'PK'; kEl.classList.add('pk'); }
+    else if (key && key.startsWith('FK')) { kEl.textContent = key; kEl.classList.add('fk'); }
+    else if (key === 'UK') { kEl.textContent = 'UK'; kEl.classList.add('uk'); }
+
+    row.appendChild(nEl);
+    row.appendChild(tEl);
+    row.appendChild(kEl);
+    div.appendChild(row);
+  });
+
+  diagram.appendChild(div);
+});
+
+// ── Draw relationship lines ───────────────────────────────────────────────────
+const svg = document.getElementById('rel-svg');
+svg.setAttribute('width',  canvasW);
+svg.setAttribute('height', canvasH);
+
+// Helper: get a connection point on the boundary of an entity box
+// side: 'left' | 'right' | 'auto'
+function connPt(id, side) {
+  const p = posMap[id];
+  const mx = p.x + p.w / 2;
+  const my = p.y + p.h / 2;
+  if (side === 'left')  return { x: p.x,       y: my };
+  if (side === 'right') return { x: p.x + p.w, y: my };
+  return { x: mx, y: my };
+}
+
+// For each relation, pick sides and draw a bezier path
+RELATIONS.forEach(([from, to, label]) => {
+  const fp = posMap[from];
+  const tp = posMap[to];
+  if (!fp || !tp) return;
+
+  const fcx = fp.x + fp.w / 2;
+  const tcx = tp.x + tp.w / 2;
+
+  let fSide, tSide;
+  if (Math.abs(fcx - tcx) < 10) {
+    // Same column — route out to the right
+    fSide = 'right'; tSide = 'right';
+  } else if (fcx < tcx) {
+    fSide = 'right'; tSide = 'left';
+  } else {
+    fSide = 'left'; tSide = 'right';
+  }
+
+  const f = connPt(from, fSide);
+  const t = connPt(to,   tSide);
+
+  let d;
+  if (fSide === tSide && fSide === 'right') {
+    // Same-column right-side arc
+    const ox = Math.max(fp.x + fp.w, tp.x + tp.w) + 28;
+    d = `M${f.x},${f.y} C${ox},${f.y} ${ox},${t.y} ${t.x},${t.y}`;
+  } else {
+    const dx = Math.abs(t.x - f.x) * 0.45;
+    const cx1 = f.x + (fSide === 'right' ? dx : -dx);
+    const cx2 = t.x + (tSide === 'right' ? dx : -dx);
+    d = `M${f.x},${f.y} C${cx1},${f.y} ${cx2},${t.y} ${t.x},${t.y}`;
+  }
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('class', 'rel-line');
+  svg.appendChild(path);
+});
+</script>
+</body>
+</html>

@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   TextField,
   Button,
   Alert,
   CircularProgress,
 } from '@mui/material';
+import { School as SchoolIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import apiClient from '../services/apiClient';
 import type { User } from '../types';
+import { NAVY, NAVY_MAIN, AMBER } from '../theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -90,22 +90,59 @@ const LoginPage: React.FC = () => {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        flexDirection: { xs: 'column', md: 'row' },
         minHeight: '100vh',
-        bgcolor: '#f5f6fa',
+        width: '100%',
       }}
     >
-      <Card sx={{ width: 420, p: 2, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
-        <CardContent>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              TLC Management System
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Sign in with your email and password
-            </Typography>
-          </Box>
+      {/* ── Brand panel (left on desktop, top on mobile) ── */}
+      <Box
+        sx={{
+          flex: { xs: 'none', md: 1 },
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: { xs: 'center', md: 'flex-start' },
+          textAlign: { xs: 'center', md: 'left' },
+          color: '#fff',
+          px: { xs: 3, sm: 6, md: 8 },
+          py: { xs: 5, md: 6 },
+          background: `radial-gradient(1200px 600px at 0% 0%, ${NAVY_MAIN} 0%, ${NAVY} 60%)`,
+        }}
+      >
+        <Box sx={{ width: 64, height: 64, borderRadius: '50%', mb: 2.5,
+                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   bgcolor: 'rgba(255,255,255,0.12)' }}>
+          <SchoolIcon sx={{ color: AMBER, fontSize: '2.2rem' }} />
+        </Box>
+        <Typography sx={{ fontWeight: 800, letterSpacing: '-0.02em',
+                          fontSize: { xs: '1.6rem', md: '2.4rem' }, lineHeight: 1.1 }}>
+          TLC Management System
+        </Typography>
+        <Typography sx={{ mt: 1.5, maxWidth: 440, color: 'rgba(255,255,255,0.8)',
+                          fontSize: { xs: '0.95rem', md: '1.05rem' } }}>
+          Teacher Leadership Circle · CeQ — plan events, track attendance, and
+          monitor programme impact, all in one place.
+        </Typography>
+      </Box>
+
+      {/* ── Form panel (right on desktop, bottom on mobile) ── */}
+      <Box
+        sx={{
+          flex: { xs: 1, md: 1 },
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          bgcolor: 'background.paper',
+          px: { xs: 3, sm: 6 },
+          py: { xs: 5, md: 6 },
+        }}
+      >
+        <Box sx={{ width: '100%', maxWidth: 400 }}>
+          <Typography variant="h5" sx={{ fontWeight: 800 }}>Sign in</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3, mt: 0.5 }}>
+            Sign in with your email and password
+          </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -149,8 +186,8 @@ const LoginPage: React.FC = () => {
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
             </Button>
           </Box>
-        </CardContent>
-      </Card>
+        </Box>
+      </Box>
     </Box>
   );
 };

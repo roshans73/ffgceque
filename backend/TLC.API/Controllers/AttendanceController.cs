@@ -194,23 +194,30 @@ public class AttendanceController : ControllerBase
 
                 if (attendee.TeacherId.HasValue)
                 {
-                    teacherId = attendee.TeacherId.Value;
+                    var existingTeacher = await _unitOfWork.Teachers.GetById(attendee.TeacherId.Value);
+                    if (existingTeacher == null)
+                        return BadRequest($"Teacher with ID {attendee.TeacherId.Value} not found");
+
+                    teacherId = existingTeacher.Id;
                 }
                 else
                 {
                     if (string.IsNullOrWhiteSpace(attendee.TeacherName))
                         return BadRequest("Teacher name is required for new teachers");
 
+                    if (!attendee.DistrictId.HasValue || !attendee.BlockId.HasValue)
+                        return BadRequest("DistrictId and BlockId are required for new teachers");
+
                     var newTeacher = new Teacher
                     {
-                        TeacherCode = await _codeGenerator.GenerateTeacherCodeAsync(0),
+                        TeacherCode = await _codeGenerator.GenerateTeacherCodeAsync(attendee.DistrictId.Value),
                         Name = attendee.TeacherName,
-                        School = attendee.School ?? "",
-                        DistrictId = 0, // Masterclasses don't have district/block
-                        BlockId = 0,
-                        Gender = attendee.Gender ?? "",
-                        Mobile = attendee.Mobile ?? "",
-                        Email = attendee.Email ?? "",
+                        School = attendee.School ?? string.Empty,
+                        DistrictId = attendee.DistrictId.Value,
+                        BlockId = attendee.BlockId.Value,
+                        Gender = attendee.Gender ?? string.Empty,
+                        Mobile = attendee.Mobile ?? string.Empty,
+                        Email = attendee.Email ?? string.Empty,
                         IsTipTeacher = attendee.IsTipTeacher,
                         YearsInTip = attendee.YearsInTip,
                         CoachId = attendee.CoachId,
@@ -220,19 +227,16 @@ public class AttendanceController : ControllerBase
 
                     await _unitOfWork.Teachers.Add(newTeacher);
                     await _unitOfWork.SaveChangesAsync();
-                    newTeachers.Add(newTeacher);
                     teacherId = newTeacher.Id;
                 }
 
-                var attendance = new TLCAttendance
+                attendanceRecords.Add(new TLCAttendance
                 {
                     TlcOrMasterclassId = 0,
                     TeacherId = teacherId,
                     AttendanceDate = dto.MasterclassDate,
                     CreatedAt = DateTime.UtcNow
-                };
-
-                attendanceRecords.Add(attendance);
+                });
             }
 
             // Create Masterclass record

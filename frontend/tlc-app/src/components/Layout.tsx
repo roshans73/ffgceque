@@ -21,6 +21,7 @@ import {
   useTheme,
 } from '@mui/material';
 import {
+  CalendarMonth as CalendarIcon,
   Dashboard as DashboardIcon,
   EventNote as EventNoteIcon,
   ExpandLess,
@@ -159,6 +160,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         Dashboard
       </Button>
 
+      {/* Events */}
+      <Button
+        startIcon={<CalendarIcon sx={{ fontSize: '1rem !important' }} />}
+        onClick={() => go('/events/calendar')}
+        sx={{
+          color: 'white',
+          textTransform: 'none',
+          px: 1.75,
+          height: NAV_H,
+          borderRadius: 0,
+          fontSize: '0.85rem',
+          fontWeight: isActive('/events') ? 700 : 400,
+          borderBottom: isActive('/events') ? `3px solid ${ACCENT}` : '3px solid transparent',
+          borderTop: '3px solid transparent',
+          '&:hover': { bgcolor: NAV_HOVER, borderBottom: `3px solid rgba(255,255,255,0.4)` },
+        }}
+      >
+        Events
+      </Button>
+
       {/* Master Data */}
       {hasRole('TechMETeam') && (
         <NavDropdown
@@ -198,8 +219,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         active={isActive('/reports')}
         onNavigate={go}
         items={[
-          { label: 'Year-End Summary',      path: '/reports/yearend' },
-          { label: 'Longitudinal Analysis', path: '/reports/longitudinal' },
+          { label: 'Year-End Summary',            path: '/reports/yearend' },
+          { label: 'Longitudinal Analysis',       path: '/reports/longitudinal' },
+          { label: 'Teacher Leader Formation',    path: '/reports/teacherleader-formation' },
         ]}
       />
 
@@ -242,6 +264,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <ListItemButton onClick={() => go('/dashboard')}>
           <ListItemIcon><DashboardIcon /></ListItemIcon>
           <ListItemText primary="Dashboard" />
+        </ListItemButton>
+
+        <ListItemButton onClick={() => go('/events/calendar')}>
+          <ListItemIcon><CalendarIcon /></ListItemIcon>
+          <ListItemText primary="Events" />
         </ListItemButton>
 
         {hasRole('TechMETeam') && (
@@ -305,6 +332,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ListItemButton sx={{ pl: 4 }} onClick={() => go('/reports/longitudinal')}>
               <ListItemText primary="Longitudinal Analysis" />
             </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }} onClick={() => go('/reports/teacherleader-formation')}>
+              <ListItemText primary="Teacher Leader Formation" />
+            </ListItemButton>
           </List>
         </Collapse>
 
@@ -321,12 +351,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#f5f6fa' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%', bgcolor: 'background.default' }}>
 
       {/* ── Brand bar ── */}
       <AppBar
         position="fixed"
-        sx={{ bgcolor: BRAND_BG, zIndex: 1300, boxShadow: 'none',
+        sx={{ background: `linear-gradient(90deg, ${BRAND_BG} 0%, ${NAV_BG} 100%)`,
+              zIndex: 1300, boxShadow: 'none',
               borderBottom: '1px solid rgba(255,255,255,0.08)' }}
       >
         <Toolbar sx={{ minHeight: `${BRAND_H}px !important` }}>
@@ -359,7 +390,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Avatar / profile menu trigger */}
           <IconButton onClick={(e) => setProfileAnchor(e.currentTarget)} size="small">
-            <Avatar sx={{ width: 34, height: 34, bgcolor: '#3b82f6', fontSize: '0.9rem', fontWeight: 700 }}>
+            <Avatar sx={{ width: 34, height: 34, bgcolor: ACCENT, color: BRAND_BG, fontSize: '0.9rem', fontWeight: 700 }}>
               {initial}
             </Avatar>
           </IconButton>
@@ -413,11 +444,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         sx={{
           flexGrow: 1,
           mt: { xs: `${BRAND_H}px`, md: `${BRAND_H + NAV_H}px` },
+          width: '100%',
           minWidth: 0,
+          overflowX: 'hidden',
         }}
       >
         <OfflineBanner />
-        <Box sx={{ p: { xs: 2, md: 3 } }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 }, width: '100%', maxWidth: '100%', mx: 'auto' }}>
           {children}
         </Box>
       </Box>

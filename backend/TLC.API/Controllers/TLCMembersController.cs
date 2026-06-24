@@ -44,34 +44,48 @@ public class TLCMembersController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "TLCManager,TechMETeam")]
-    public async Task<ActionResult<TLCMemberDto>> Create(CreateTLCMemberDto dto)
+    public async Task<IActionResult> Create(IEnumerable<CreateTLCMemberDto> dtos)
     {
-        var group = await _unitOfWork.TLCGroups.GetById(dto.TlcGroupId);
-        if (group == null)
-            return BadRequest("TLC Group not found");
+        var dtoList = dtos.ToList();
+        var members = new List<TLCMember>();
+        var existingMembers = await _unitOfWork.TLCMembers.GetAll();
 
-        var teacher = await _unitOfWork.Teachers.GetById(dto.TeacherId);
-        if (teacher == null)
-            return BadRequest("Teacher not found");
-
-        var existing = (await _unitOfWork.TLCMembers.GetAll())
-            .FirstOrDefault(m => m.TlcGroupId == dto.TlcGroupId && m.TeacherId == dto.TeacherId);
-
-        if (existing != null)
-            return Conflict("Teacher is already a member of this TLC group");
-
-        var member = new TLCMember
+        foreach (var dto in dtoList)
         {
-            TlcGroupId = dto.TlcGroupId,
-            TeacherId = dto.TeacherId,
-            MembershipDate = dto.MembershipDate,
-            CreatedAt = DateTime.UtcNow
-        };
+            var group = await _unitOfWork.TLCGroups.GetById(dto.TlcGroupId);
+            if (group == null)
+                return BadRequest($"TLC Group {dto.TlcGroupId} not found");
 
-        await _unitOfWork.TLCMembers.Add(member);
+            var teacher = await _unitOfWork.Teachers.GetById(dto.TeacherId);
+            if (teacher == null)
+                return BadRequest($"Teacher {dto.TeacherId} not found");
+
+            var existing = existingMembers.FirstOrDefault(m => m.TlcGroupId == dto.TlcGroupId && m.TeacherId == dto.TeacherId);
+            if (existing != null)
+                return Conflict($"Teacher {dto.TeacherId} is already a member of TLC group {dto.TlcGroupId}");
+
+            var checkInBatch = members.FirstOrDefault(m => m.TlcGroupId == dto.TlcGroupId && m.TeacherId == dto.TeacherId);
+            if (checkInBatch != null)
+                return Conflict($"Duplicate membership in request: Teacher {dto.TeacherId} in group {dto.TlcGroupId}");
+
+            var member = new TLCMember
+            {
+                TlcGroupId = dto.TlcGroupId,
+                TeacherId = dto.TeacherId,
+                MembershipDate = dto.MembershipDate,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.TLCMembers.Add(member);
+            members.Add(member);
+        }
+
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = member.Id }, MapToDto(member));
+        if (dtoList.Count == 1)
+            return CreatedAtAction(nameof(GetById), new { id = members[0].Id }, MapToDto(members[0]));
+
+        return Ok(members.Select(MapToDto));
     }
 
     [HttpDelete("{id}")]
