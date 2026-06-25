@@ -15,15 +15,22 @@ import { Layout } from './components/Layout';
 // Pages
 import { Dashboard } from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
-import CoachesPage from './pages/CoachesPage';
-import TeachersPage from './pages/TeachersPage';
-import TLCGroupsPage from './pages/TLCGroupsPage';
+import MasterDataPage from './pages/MasterData/MasterDataPage';
+import { masterDataPageConfigs } from './data/pageConfig/masterDataPageConfigRegistry';
 import TLCAttendancePage from './pages/TLCAttendancePage';
 import MasterclassAttendancePage from './pages/MasterclassAttendancePage';
 import YearEndReportPage from './pages/YearEndReportPage';
 import EventCalendarPage from './pages/EventCalendarPage';
 import LongitudinalReportPage from './pages/LongitudinalReportPage';
 import UsersPage from './pages/UsersPage';
+
+// Master data routes are derived from the config registry, so adding a new
+// master entity is a config change, not a routing/page change.
+const MASTER_DATA_ROUTES: Array<{ path: string; configKey: keyof typeof masterDataPageConfigs }> = [
+  { path: '/masters/coaches', configKey: 'coaches' },
+  { path: '/masters/teachers', configKey: 'teachers' },
+  { path: '/masters/tlcgroups', configKey: 'tlcgroups' },
+];
 
 const AppContent: React.FC = () => (
   <Routes>
@@ -36,15 +43,19 @@ const AppContent: React.FC = () => (
     } />
 
     {/* Master Data — TechMETeam (bulk upload embedded in each page) */}
-    <Route path="/masters/coaches" element={
-      <RoleProtectedRoute requiredRole="TechMETeam"><Layout><CoachesPage /></Layout></RoleProtectedRoute>
-    } />
-    <Route path="/masters/teachers" element={
-      <RoleProtectedRoute requiredRole="TechMETeam"><Layout><TeachersPage /></Layout></RoleProtectedRoute>
-    } />
-    <Route path="/masters/tlcgroups" element={
-      <RoleProtectedRoute requiredRole="TechMETeam"><Layout><TLCGroupsPage /></Layout></RoleProtectedRoute>
-    } />
+    {MASTER_DATA_ROUTES.map(({ path, configKey }) => (
+      <Route
+        key={path}
+        path={path}
+        element={
+          <RoleProtectedRoute requiredRole="TechMETeam">
+            <Layout>
+              <MasterDataPage config={masterDataPageConfigs[configKey]} />
+            </Layout>
+          </RoleProtectedRoute>
+        }
+      />
+    ))}
 
     {/* User Management — TechMETeam & SustainabilityLead */}
     <Route path="/users" element={
@@ -75,8 +86,8 @@ const AppContent: React.FC = () => (
     } />
 
     {/* Fallback */}
-    <Route path="/"  element={<Navigate to="/dashboard" replace />} />
-    <Route path="*"  element={<Navigate to="/dashboard" replace />} />
+    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    <Route path="*" element={<Navigate to="/dashboard" replace />} />
   </Routes>
 );
 

@@ -30,8 +30,8 @@ const ACCENTS: Record<Accent, { fg: string; bg: string }> = {
 };
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
 ];
 
 export const Dashboard: React.FC = () => {
@@ -52,7 +52,6 @@ export const Dashboard: React.FC = () => {
           apiClient.getTLCAndMasterclasses({ year: currentYear, status: 'Planned' }),
         ]);
         setKpis(kpiRes.data);
-
         const planned = (eventsRes.data as TLCAndMasterclass[]).filter((e) => {
           if (e.status !== 'Planned' || !e.dateConducted) return false;
           const d = new Date(e.dateConducted);
@@ -76,21 +75,74 @@ export const Dashboard: React.FC = () => {
   }> = ({ title, value, icon, accent }) => {
     const c = ACCENTS[accent];
     return (
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-        <Card sx={{ height: '100%', transition: 'box-shadow .2s, transform .2s',
-                    '&:hover': { boxShadow: '0 8px 24px rgba(16,24,40,0.10)', transform: 'translateY(-2px)' } }}>
-          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2.5 }}>
-            <Box sx={{ width: 52, height: 52, borderRadius: 2.5, flexShrink: 0,
-                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                       bgcolor: c.bg, color: c.fg }}>
+      // xs:6 gives 2-per-row on phones, sm:6 keeps 2-per-row on small tablets,
+      // md:4 gives 3-per-row on medium, lg:3 gives 4-per-row on large.
+      <Grid size={{ xs: 6, sm: 6, md: 4, lg: 3 }}>
+        <Card
+          sx={{
+            height: '100%',
+            transition: 'box-shadow .2s, transform .2s',
+            '&:hover': {
+              boxShadow: '0 8px 24px rgba(16,24,40,0.10)',
+              transform: 'translateY(-2px)',
+            },
+          }}
+        >
+          <CardContent
+            sx={{
+              display: 'flex',
+              // Stack icon + text vertically on very small screens,
+              // side-by-side from sm up.
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: { xs: 1, sm: 2 },
+              py: 2,
+              px: { xs: 1.5, sm: 2 },
+              // MUI CardContent adds pb:24px on last-child; keep it tidy.
+              '&:last-child': { pb: 2 },
+            }}
+          >
+            <Box
+              sx={{
+                width: { xs: 40, sm: 52 },
+                height: { xs: 40, sm: 52 },
+                borderRadius: 2.5,
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: c.bg,
+                color: c.fg,
+                '& svg': { fontSize: { xs: '1.3rem', sm: '1.6rem' } },
+              }}
+            >
               {icon}
             </Box>
             <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'text.secondary',
-                                textTransform: 'uppercase', letterSpacing: '0.03em', lineHeight: 1.3 }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: '0.68rem', sm: '0.8rem' },
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.03em',
+                  lineHeight: 1.3,
+                  // Wrap long titles on mobile instead of overflowing
+                  whiteSpace: 'normal',
+                  wordBreak: 'break-word',
+                }}
+              >
                 {title}
               </Typography>
-              <Typography sx={{ fontWeight: 800, fontSize: '1.9rem', color: 'text.primary', lineHeight: 1.1, mt: 0.25 }}>
+              <Typography
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: '1.5rem', sm: '1.9rem' },
+                  color: 'text.primary',
+                  lineHeight: 1.1,
+                  mt: 0.25,
+                }}
+              >
                 {value}
               </Typography>
             </Box>
@@ -101,9 +153,11 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ px: { xs: 0, sm: 0 } }}>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>Dashboard</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.4rem', sm: '2.125rem' } }}>
+          Dashboard
+        </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           Programme overview at a glance — Teacher Leadership Circle
         </Typography>
@@ -114,15 +168,20 @@ export const Dashboard: React.FC = () => {
           <CircularProgress />
         </Box>
       ) : kpis ? (
-        <Grid container spacing={2.5}>
-          <KPICard title={`Events Planned · ${MONTH_NAMES[currentMonth]}`} value={eventsPlannedThisMonth} accent="amber" icon={<CalendarMonthIcon />} />
-          <KPICard title="TLC Groups Formed"  value={kpis.tlcGroupsFormed}   accent="navy"  icon={<GroupsIcon />} />
-          <KPICard title="Teacher Leaders"     value={kpis.teacherLeaders}    accent="navy"  icon={<SchoolIcon />} />
-          <KPICard title="TLC Members"         value={kpis.tlcMembers}        accent="navy"  icon={<PeopleIcon />} />
-          <KPICard title="TLC Meets Planned"   value={kpis.tlcMeetsPlanned}   accent="amber" icon={<EventNoteIcon />} />
-          <KPICard title="TLC Meets Conducted" value={kpis.tlcMeetsConducted} accent="green" icon={<EventAvailableIcon />} />
-          <KPICard title="TLCs Cancelled"      value={kpis.tlcsCancelled}     accent="red"   icon={<EventBusyIcon />} />
-          <KPICard title="Masterclasses Held"  value={kpis.masterclassesHeld} accent="green" icon={<CoPresentIcon />} />
+        <Grid container spacing={{ xs: 1.5, sm: 2.5 }}>
+          <KPICard
+            title={`Events Planned · ${MONTH_NAMES[currentMonth]}`}
+            value={eventsPlannedThisMonth}
+            accent="amber"
+            icon={<CalendarMonthIcon />}
+          />
+          <KPICard title="TLC Groups Formed"   value={kpis.tlcGroupsFormed}   accent="navy"  icon={<GroupsIcon />} />
+          <KPICard title="Teacher Leaders"      value={kpis.teacherLeaders}    accent="navy"  icon={<SchoolIcon />} />
+          <KPICard title="TLC Members"          value={kpis.tlcMembers}        accent="navy"  icon={<PeopleIcon />} />
+          <KPICard title="TLC Meets Planned"    value={kpis.tlcMeetsPlanned}   accent="amber" icon={<EventNoteIcon />} />
+          <KPICard title="TLC Meets Conducted"  value={kpis.tlcMeetsConducted} accent="green" icon={<EventAvailableIcon />} />
+          <KPICard title="TLCs Cancelled"       value={kpis.tlcsCancelled}     accent="red"   icon={<EventBusyIcon />} />
+          <KPICard title="Masterclasses Held"   value={kpis.masterclassesHeld} accent="green" icon={<CoPresentIcon />} />
         </Grid>
       ) : (
         <Typography>No data available</Typography>

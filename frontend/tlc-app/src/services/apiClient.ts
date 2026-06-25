@@ -34,7 +34,6 @@ class ApiClient {
       (response) => response,
       (error: AxiosError<ApiError>) => {
         if (error.response?.status === 401) {
-          // Unauthorized - redirect to login
           localStorage.removeItem('accessToken');
           localStorage.removeItem('user');
           window.location.href = '/login';
@@ -44,34 +43,53 @@ class ApiClient {
     );
   }
 
-  // Master Data APIs
-  getDistricts = () => this.instance.get('/districts');
-  getDistrictById = (id: number) => this.instance.get(`/districts/${id}`);
+  // ── Master Data APIs ───────────────────────────────────────────────────────
+  // All lookup methods now accept an optional AbortSignal and forward it to
+  // axios via the `signal` config option. This is what actually cancels the
+  // underlying XHR — without this, AbortController.abort() only resolved the
+  // JS promise race but the HTTP request kept going, causing CORS preflights
+  // to keep firing after mobile navigation away from the page.
+
+  getDistricts = (signal?: AbortSignal) =>
+    this.instance.get('/districts', { signal });
+
+  getDistrictById = (id: number, signal?: AbortSignal) =>
+    this.instance.get(`/districts/${id}`, { signal });
+
   createDistrict = (data: any) => this.instance.post('/districts', data);
   updateDistrict = (id: number, data: any) => this.instance.put(`/districts/${id}`, data);
   deleteDistrict = (id: number) => this.instance.delete(`/districts/${id}`);
 
-  getBlocks = (districtId?: number) =>
-    this.instance.get('/blocks', { params: { districtId } });
+  getBlocks = (districtId?: number, signal?: AbortSignal) =>
+    this.instance.get('/blocks', { params: { districtId }, signal });
+
   createBlock = (data: any) => this.instance.post('/blocks', data);
 
-  getCoaches = (districtId?: number, blockId?: number) =>
-    this.instance.get('/coaches', { params: { districtId, blockId } });
+  getCoaches = (districtId?: number, blockId?: number, signal?: AbortSignal) =>
+    this.instance.get('/coaches', { params: { districtId, blockId }, signal });
+
   createCoach = (data: any) => this.instance.post('/coaches', data);
 
-  getTeachers = () => this.instance.get('/teachers');
-  getTeachersByGroup = (groupId: number) =>
-    this.instance.get(`/teachers?groupId=${groupId}`);
+  getTeachers = (signal?: AbortSignal) =>
+    this.instance.get('/teachers', { signal });
+
+  getTeachersByGroup = (groupId: number, signal?: AbortSignal) =>
+    this.instance.get(`/teachers?groupId=${groupId}`, { signal });
+
   createTeacher = (data: unknown) => this.instance.post('/teachers', data);
 
-  getTLCGroups = () => this.instance.get('/tlcgroups');
-  getTLCGroupById = (id: number) => this.instance.get(`/tlcgroups/${id}`);
+  getTLCGroups = (signal?: AbortSignal) =>
+    this.instance.get('/tlcgroups', { signal });
+
+  getTLCGroupById = (id: number, signal?: AbortSignal) =>
+    this.instance.get(`/tlcgroups/${id}`, { signal });
+
   createTLCGroup = (data: any) => this.instance.post('/tlcgroups', data);
 
-  getTLCMembers = (groupId: number) =>
-    this.instance.get(`/tlcgroups/${groupId}/members`);
+  getTLCMembers = (groupId: number, signal?: AbortSignal) =>
+    this.instance.get(`/tlcgroups/${groupId}/members`, { signal });
 
-  // Bulk Upload APIs
+  // ── Bulk Upload APIs ───────────────────────────────────────────────────────
   uploadCoaches = (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -112,16 +130,23 @@ class ApiClient {
     });
   };
 
-  // Attendance APIs
+  // ── Attendance APIs ────────────────────────────────────────────────────────
   recordTLCAttendance = (data: any) =>
     this.instance.post('/attendance/tlc', data);
 
   recordMasterclassAttendance = (data: any) =>
     this.instance.post('/attendance/masterclass', data);
 
-  // TLC & Masterclass Events
-  getTLCAndMasterclasses = (params?: { type?: string; status?: string; districtId?: number; blockId?: number; tlcGroupId?: number; year?: number }) =>
-    this.instance.get('/tlcandmasterclass', { params });
+  // ── TLC & Masterclass Events ───────────────────────────────────────────────
+  getTLCAndMasterclasses = (params?: {
+    type?: string;
+    status?: string;
+    districtId?: number;
+    blockId?: number;
+    tlcGroupId?: number;
+    year?: number;
+  }, signal?: AbortSignal) =>
+    this.instance.get('/tlcandmasterclass', { params, signal });
 
   createTLCAndMasterclass = (data: unknown) =>
     this.instance.post('/tlcandmasterclass', data);
@@ -129,27 +154,32 @@ class ApiClient {
   updateTLCAndMasterclass = (id: number, data: unknown) =>
     this.instance.put(`/tlcandmasterclass/${id}`, data);
 
-  // Analytics APIs
-  getDashboardKpis = (districtId?: number, blockId?: number) =>
+  // ── Analytics APIs ─────────────────────────────────────────────────────────
+  getDashboardKpis = (districtId?: number, blockId?: number, signal?: AbortSignal) =>
     this.instance.get('/analytics/dashboard', {
-      params: { districtId, blockId }
+      params: { districtId, blockId },
+      signal,
     });
 
-  getYearEndSummary = (districtId?: number, blockId?: number, year?: number) =>
+  getYearEndSummary = (districtId?: number, blockId?: number, year?: number, signal?: AbortSignal) =>
     this.instance.get('/analytics/yearend-summary', {
       params: { districtId, blockId, year },
+      signal,
     });
 
-  getTLCGroupReport = (tlcGroupId: number) =>
-    this.instance.get(`/analytics/tlcgroup/${tlcGroupId}`);
+  getTLCGroupReport = (tlcGroupId: number, signal?: AbortSignal) =>
+    this.instance.get(`/analytics/tlcgroup/${tlcGroupId}`, { signal });
 
-  getLongitudinalAnalysis = (districtId?: number, blockId?: number) =>
+  getLongitudinalAnalysis = (districtId?: number, blockId?: number, signal?: AbortSignal) =>
     this.instance.get('/analytics/longitudinal', {
       params: { districtId, blockId },
+      signal,
     });
 
-  // User Management APIs
-  getUsers = () => this.instance.get('/users');
+  // ── User Management APIs ───────────────────────────────────────────────────
+  getUsers = (signal?: AbortSignal) =>
+    this.instance.get('/users', { signal });
+
   createUser = (data: unknown) => this.instance.post('/users', data);
   updateUser = (id: number, data: unknown) => this.instance.put(`/users/${id}`, data);
   activateUser   = (id: number) => this.instance.patch(`/users/${id}/activate`);
