@@ -169,6 +169,27 @@ class ApiClient {
   updateUser = (id: number, data: unknown) => this.instance.put(`/users/${id}`, data);
   activateUser   = (id: number) => this.instance.patch(`/users/${id}/activate`);
   deactivateUser = (id: number) => this.instance.patch(`/users/${id}/deactivate`);
+
+  // Generic CRUD APIs for sync operations
+  get = (endpoint: string, config?: any) => this.instance.get(endpoint, config);
+  post = (endpoint: string, data?: any, config?: any) => this.instance.post(endpoint, data, config);
+  put = (endpoint: string, data?: any, config?: any) => this.instance.put(endpoint, data, config);
+  patch = (endpoint: string, data?: any, config?: any) => this.instance.patch(endpoint, data, config);
+  delete = (endpoint: string, config?: any) => this.instance.delete(endpoint, config);
+
+  // Enhanced sync-specific APIs
+  getRecord = (entityType: string, id: number) =>
+    this.instance.get(`/${entityType}/${id}`);
+
+  updateRecord = (entityType: string, id: number, data: any) =>
+    this.instance.put(`/${entityType}/${id}`, data);
+
+  deleteRecord = (entityType: string, id: number) =>
+    this.instance.delete(`/${entityType}/${id}`);
+
+  createTLC = (data: any) =>
+    this.instance.post('/tlcandmasterclass', data);
+
 }
 
 export default new ApiClient();
