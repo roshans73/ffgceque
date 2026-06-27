@@ -6,6 +6,7 @@ public interface ICodeGeneratorService
 {
     Task<string> GenerateTeacherCodeAsync(int districtId);
     Task<string> GenerateTLCGroupCodeAsync(int districtId, string groupShortForm);
+    Task<string> GenerateTLCEventCodeAsync(int tlcGroupId);
     Task<string> GenerateMasterclassCodeAsync();
 }
 
@@ -24,7 +25,17 @@ public class CodeGeneratorService : ICodeGeneratorService
     public async Task<string> GenerateTeacherCodeAsync(int districtId)
     {
         var teachers = await _unitOfWork.Teachers.GetAll();
-        var maxTeacherId = teachers.Max(t => int.TryParse(t.TeacherCode.Substring(1), out var id) ? id : 0);
+        var maxTeacherId = teachers
+            .Select(t =>
+            {
+                if (string.IsNullOrWhiteSpace(t.TeacherCode) || t.TeacherCode.Length <= 1)
+                    return 0;
+
+                return int.TryParse(t.TeacherCode.Substring(1), out var id) ? id : 0;
+            })
+            .DefaultIfEmpty(0)
+            .Max();
+
         var newTeacherId = maxTeacherId + 1;
         return $"T{newTeacherId:0000}";
     }
@@ -55,6 +66,17 @@ public class CodeGeneratorService : ICodeGeneratorService
     /// <summary>
     /// Generates Masterclass Code in format: MSnnn where nnn is a running serial number
     /// </summary>
+    public async Task<string> GenerateTLCEventCodeAsync(int tlcGroupId)
+    {
+        var group = await _unitOfWork.TLCGroups.GetById(tlcGroupId);
+        if (group == null)
+            throw new ArgumentException($"TLC Group with ID {tlcGroupId} not found");
+
+        var tlcEvents = await _unitOfWork.TLCAndMasterclasses.GetAll();
+        var existingCount = tlcEvents.Count(e => e.Type == "TLC" && e.TlcGroupId == tlcGroupId);
+        return $"{group.TlcGroupCode}/{existingCount + 1:00}";
+    }
+
     public async Task<string> GenerateMasterclassCodeAsync()
     {
         var masterclasses = await _unitOfWork.TLCAndMasterclasses.GetAll();

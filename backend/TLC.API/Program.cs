@@ -51,8 +51,6 @@ void ConfigureLocalJwtBearer(JwtBearerOptions options)
 
 if (!builder.Environment.IsDevelopment())
 {
-    // In Production/Staging the AzureAd section in configuration must be populated.
-    // Requests can authenticate with either an Azure AD token or a local JWT issued by /api/auth/login.
     const string LocalJwtScheme = "LocalJwt";
 
     builder.Services.AddAuthentication(options =>

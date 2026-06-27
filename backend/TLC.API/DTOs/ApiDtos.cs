@@ -187,7 +187,7 @@ public class UserDto
 
 public class CreateUserDto
 {
-    public string AzureAadId { get; set; } = string.Empty;
+    public string? AzureAadId { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public int RoleId { get; set; }
@@ -228,6 +228,8 @@ public class BulkUploadResponse
 // Dashboard DTOs
 public class DashboardKpiDto
 {
+    public int Districts { get; set; }
+    public int Blocks { get; set; }
     public int TlcGroupsFormed { get; set; }
     public int TeacherLeaders { get; set; }
     public int TlcMembers { get; set; }
@@ -235,6 +237,22 @@ public class DashboardKpiDto
     public int TlcMeetsConducted { get; set; }
     public int TlcsCancelled { get; set; }
     public int MasterclassesHeld { get; set; }
+    public int TipTeachersAttendedAtLeastOne { get; set; }
+    public int NonTipTeachersAttendedAtLeastOne { get; set; }
+    public int TlcMeetsHeld { get; set; }
+    public double PercentTeachersMin3 { get; set; }
+    public int UniqueTeachers60PercentOrMore { get; set; }
+    public double AvgTeachersPerMasterclass { get; set; }
+    public List<AttendanceReportEntryDto> AttendanceReport { get; set; } = new();
+}
+
+public class AttendanceReportEntryDto
+{
+    public int TeacherId { get; set; }
+    public string TeacherName { get; set; } = string.Empty;
+    public string School { get; set; } = string.Empty;
+    public int TlcsAttended { get; set; }
+    public double PercentOfTotal { get; set; }
 }
 
 // Attendance Entry DTOs
@@ -260,6 +278,8 @@ public class AttendeeDto
     public bool IsTipTeacher { get; set; }
     public int? YearsInTip { get; set; }
     public int? CoachId { get; set; }
+    public int? DistrictId { get; set; }
+    public int? BlockId { get; set; }
 }
 
 public class MasterclassAttendanceEntryDto
