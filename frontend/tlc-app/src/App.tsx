@@ -15,10 +15,6 @@ import { Layout } from "./components/Layout";
 // Pages
 import { Dashboard } from "./pages/Dashboard";
 import LoginPage from "./pages/LoginPage";
-// import DistrictsBlocksPage from "./pages/DistrictsBlocksPage";
-// import CoachesPage from "./pages/CoachesPage";
-// import TeachersPage from "./pages/TeachersPage";
-// import TLCGroupsPage from "./pages/TLCGroupsPage";
 import TLCAttendancePage from "./pages/TLCAttendancePage";
 import MasterclassAttendancePage from "./pages/MasterclassAttendancePage";
 import YearEndReportPage from "./pages/YearEndReportPage";
@@ -151,8 +147,8 @@ const AppContent: React.FC = () => (
     />
 
     {/* Fallback */}
-    {/* <Route path="/" element={<Navigate to="/login" replace />} />
-    <Route path="*" element={<Navigate to="/login" replace />} /> */}
+    <Route path="/" element={<Navigate to="/login" replace />} />
+    <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );
 
