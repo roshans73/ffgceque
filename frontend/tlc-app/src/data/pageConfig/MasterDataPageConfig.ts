@@ -72,6 +72,13 @@ export interface MasterDataPageConfig<T extends { id: number } = any> {
     enabled: boolean;
     columnHint: string;
   };
+    childEntity?: {
+    entityLabel: string;
+    subtitle: string;
+    table: MasterDataPageConfig['table'];
+    form: MasterDataPageConfig['form'];
+    api: Pick<MasterDataPageConfig['api'], 'list' | 'create'>;
+  };
 }
 
 // ── Shared option sources ─────────────────────────────────────────────────────
