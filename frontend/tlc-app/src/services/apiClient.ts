@@ -34,7 +34,6 @@ class ApiClient {
       (response) => response,
       (error: AxiosError<ApiError>) => {
         if (error.response?.status === 401) {
-          // Unauthorized - redirect to login
           localStorage.removeItem('accessToken');
           localStorage.removeItem('user');
           window.location.href = '/login';
@@ -45,33 +44,33 @@ class ApiClient {
   }
 
   // Master Data APIs
-  getDistricts = () => this.instance.get('/districts');
+  getDistricts = (signal: AbortSignal | undefined) => this.instance.get('/districts');
   getDistrictById = (id: number) => this.instance.get(`/districts/${id}`);
   createDistrict = (data: unknown) => this.instance.post('/districts', [data]);
   updateDistrict = (id: number, data: unknown) => this.instance.put(`/districts/${id}`, data);
   deleteDistrict = (id: number) => this.instance.delete(`/districts/${id}`);
 
-  getBlocks = (districtId?: number) =>
+  getBlocks = (districtId?: number, signal?: AbortSignal | undefined) =>
     this.instance.get('/blocks', { params: { districtId } });
   createBlock = (data: unknown) => this.instance.post('/blocks', [data]);
 
-  getCoaches = (districtId?: number, blockId?: number) =>
+  getCoaches = (districtId?: number, blockId?: number, signal?: AbortSignal | undefined) =>
     this.instance.get('/coaches', { params: { districtId, blockId } });
   createCoach = (data: unknown) => this.instance.post('/coaches', [data]);
 
-  getTeachers = () => this.instance.get('/teachers');
+  getTeachers = (signal: AbortSignal | undefined) => this.instance.get('/teachers');
   getTeachersByGroup = (groupId: number) =>
     this.instance.get(`/teachers?groupId=${groupId}`);
   createTeacher = (data: unknown) => this.instance.post('/teachers', [data]);
 
-  getTLCGroups = () => this.instance.get('/tlcgroups');
+  getTLCGroups = (signal: AbortSignal | undefined) => this.instance.get('/tlcgroups');
   getTLCGroupById = (id: number) => this.instance.get(`/tlcgroups/${id}`);
   createTLCGroup = (data: unknown) => this.instance.post('/tlcgroups', [data]);
 
-  getTLCMembers = (groupId: number) =>
-    this.instance.get(`/tlcgroups/${groupId}/members`);
+  getTLCMembers = (groupId: number, signal?: AbortSignal) =>
+    this.instance.get(`/tlcgroups/${groupId}/members`, { signal });
 
-  // Bulk Upload APIs
+  // ── Bulk Upload APIs ───────────────────────────────────────────────────────
   uploadCoaches = (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -119,9 +118,16 @@ class ApiClient {
   recordMasterclassAttendance = (data: unknown) =>
     this.instance.post('/attendance/masterclass', data);
 
-  // TLC & Masterclass Events
-  getTLCAndMasterclasses = (params?: { type?: string; status?: string; districtId?: number; blockId?: number; tlcGroupId?: number; year?: number }) =>
-    this.instance.get('/tlcandmasterclass', { params });
+  // ── TLC & Masterclass Events ───────────────────────────────────────────────
+  getTLCAndMasterclasses = (params?: {
+    type?: string;
+    status?: string;
+    districtId?: number;
+    blockId?: number;
+    tlcGroupId?: number;
+    year?: number;
+  }, signal?: AbortSignal) =>
+    this.instance.get('/tlcandmasterclass', { params, signal });
 
   createTLCAndMasterclass = (data: unknown) =>
     this.instance.post('/tlcandmasterclass', [data]);
@@ -135,17 +141,19 @@ class ApiClient {
       params: { districtId, blockId, startDate, endDate }
     });
 
-  getYearEndSummary = (districtId?: number, blockId?: number, year?: number) =>
+  getYearEndSummary = (districtId?: number, blockId?: number, year?: number, signal?: AbortSignal) =>
     this.instance.get('/analytics/yearend-summary', {
       params: { districtId, blockId, year },
+      signal,
     });
 
-  getTLCGroupReport = (tlcGroupId: number) =>
-    this.instance.get(`/analytics/tlcgroup/${tlcGroupId}`);
+  getTLCGroupReport = (tlcGroupId: number, signal?: AbortSignal) =>
+    this.instance.get(`/analytics/tlcgroup/${tlcGroupId}`, { signal });
 
-  getLongitudinalAnalysis = (districtId?: number, blockId?: number) =>
+  getLongitudinalAnalysis = (districtId?: number, blockId?: number, signal?: AbortSignal) =>
     this.instance.get('/analytics/longitudinal', {
       params: { districtId, blockId },
+      signal,
     });
 
   getTeacherLeaderFormationReport = (districtId?: number, blockId?: number) =>

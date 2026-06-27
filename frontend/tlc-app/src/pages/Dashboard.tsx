@@ -297,7 +297,7 @@ export const Dashboard: React.FC = () => {
   );
 
   return (
-    <Box>
+    <Box sx={{ px: { xs: 0, sm: 0 } }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700 }}>
           Dashboard
