@@ -213,6 +213,8 @@ public class BulkUploadResponse
 // Dashboard DTOs
 public class DashboardKpiDto
 {
+    public int Districts { get; set; }
+    public int Blocks { get; set; }
     public int TlcGroupsFormed { get; set; }
     public int TeacherLeaders { get; set; }
     public int TlcMembers { get; set; }

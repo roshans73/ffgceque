@@ -40,15 +40,39 @@ public class DistrictsController : ControllerBase
     public async Task<IActionResult> Create(IEnumerable<CreateDistrictDto> dtos)
     {
         var dtoList = dtos.ToList();
+        if (dtoList.Count == 0)
+            return BadRequest(new { message = "At least one district is required" });
+
+        var existingDistricts = (await _unitOfWork.Districts.GetAll()).ToList();
         var districts = new List<District>();
 
         foreach (var dto in dtoList)
         {
+            var code = dto.Code.Trim().ToUpperInvariant();
+            var name = dto.Name.Trim();
+            var shortForm = string.IsNullOrWhiteSpace(dto.ShortForm)
+                ? code
+                : dto.ShortForm.Trim().ToUpperInvariant();
+
+            if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
+                return BadRequest(new { message = "District code and name are required" });
+
+            if (code.Length != 2)
+                return BadRequest(new { message = "District code must be exactly 2 characters" });
+
+            if (existingDistricts.Any(d => string.Equals(d.Code, code, StringComparison.OrdinalIgnoreCase)) ||
+                districts.Any(d => string.Equals(d.Code, code, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest(new { message = $"District code '{code}' already exists" });
+
+            if (existingDistricts.Any(d => string.Equals(d.Name, name, StringComparison.OrdinalIgnoreCase)) ||
+                districts.Any(d => string.Equals(d.Name, name, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest(new { message = $"District name '{name}' already exists" });
+
             var district = new District
             {
-                Code = dto.Code,
-                Name = dto.Name,
-                ShortForm = dto.ShortForm
+                Code = code,
+                Name = name,
+                ShortForm = shortForm
             };
             await _unitOfWork.Districts.Add(district);
             districts.Add(district);
@@ -133,15 +157,41 @@ public class BlocksController : ControllerBase
     public async Task<IActionResult> Create(IEnumerable<CreateBlockDto> dtos)
     {
         var dtoList = dtos.ToList();
+        if (dtoList.Count == 0)
+            return BadRequest(new { message = "At least one block is required" });
+
+        var districts = (await _unitOfWork.Districts.GetAll()).ToList();
+        var existingBlocks = (await _unitOfWork.Blocks.GetAll()).ToList();
         var blocks = new List<Block>();
 
         foreach (var dto in dtoList)
         {
+            var code = dto.Code.Trim().ToUpperInvariant();
+            var name = dto.Name.Trim();
+
+            if (!districts.Any(d => d.Id == dto.DistrictId))
+                return BadRequest(new { message = "Selected district does not exist" });
+
+            if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
+                return BadRequest(new { message = "Block code and name are required" });
+
+            if (existingBlocks.Any(b => b.DistrictId == dto.DistrictId &&
+                    string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase)) ||
+                blocks.Any(b => b.DistrictId == dto.DistrictId &&
+                    string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest(new { message = $"Block name '{name}' already exists in this district" });
+
+            if (existingBlocks.Any(b => b.DistrictId == dto.DistrictId &&
+                    string.Equals(b.Code, code, StringComparison.OrdinalIgnoreCase)) ||
+                blocks.Any(b => b.DistrictId == dto.DistrictId &&
+                    string.Equals(b.Code, code, StringComparison.OrdinalIgnoreCase)))
+                return BadRequest(new { message = $"Block code '{code}' already exists in this district" });
+
             var block = new Block
             {
                 DistrictId = dto.DistrictId,
-                Code = dto.Code,
-                Name = dto.Name
+                Code = code,
+                Name = name
             };
             await _unitOfWork.Blocks.Add(block);
             blocks.Add(block);

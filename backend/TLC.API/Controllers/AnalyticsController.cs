@@ -33,6 +33,8 @@ public class AnalyticsController : ControllerBase
             if (startDate.HasValue && endDate.HasValue && endDate.Value.Date < startDate.Value.Date)
                 return BadRequest(new { message = "End date must be on or after start date" });
 
+            var districts = (await _unitOfWork.Districts.GetAll()).ToList();
+            var blocks = (await _unitOfWork.Blocks.GetAll()).ToList();
             var tlcGroups = (await _unitOfWork.TLCGroups.GetAll()).ToList();
             var teachers = (await _unitOfWork.Teachers.GetAll()).ToList();
             var tlcMembers = (await _unitOfWork.TLCMembers.GetAll()).ToList();
@@ -46,6 +48,13 @@ public class AnalyticsController : ControllerBase
             var attendancesByEvent = attendances
                 .GroupBy(a => a.TlcOrMasterclassId)
                 .ToDictionary(g => g.Key, g => g.ToList());
+            var districtsInScope = districts
+                .Where(d => !districtId.HasValue || d.Id == districtId.Value)
+                .ToList();
+            var blocksInScope = blocks
+                .Where(b => (!districtId.HasValue || b.DistrictId == districtId.Value) &&
+                            (!blockId.HasValue || b.Id == blockId.Value))
+                .ToList();
 
             bool IsInDateRange(DateTime? date)
             {
@@ -199,6 +208,8 @@ public class AnalyticsController : ControllerBase
 
             var kpis = new DashboardKpiDto
             {
+                Districts = districtsInScope.Count,
+                Blocks = blocksInScope.Count,
                 TlcGroupsFormed = groupsInSelectedRange.Count,
                 TeacherLeaders = groupsInSelectedRange
                     .Select(g => g.TeacherLeaderId)

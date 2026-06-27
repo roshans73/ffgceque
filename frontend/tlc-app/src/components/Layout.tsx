@@ -188,6 +188,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           active={isActive('/masters')}
           onNavigate={go}
           items={[
+            { label: 'Districts & Blocks', path: '/masters/districts-blocks' },
             { label: 'Coaches',    path: '/masters/coaches' },
             { label: 'Teachers',   path: '/masters/teachers' },
             { label: 'TLC Groups', path: '/masters/tlcgroups' },
@@ -280,6 +281,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </ListItemButton>
             <Collapse in={!!mobileMenus['masters']} timeout="auto">
               <List disablePadding>
+                <ListItemButton sx={{ pl: 4 }} onClick={() => go('/masters/districts-blocks')}>
+                  <ListItemText primary="Districts & Blocks" />
+                </ListItemButton>
                 <ListItemButton sx={{ pl: 4 }} onClick={() => go('/masters/coaches')}>
                   <ListItemText primary="Coaches" />
                 </ListItemButton>

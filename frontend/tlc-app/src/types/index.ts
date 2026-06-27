@@ -87,6 +87,8 @@ export interface BulkUploadResponse {
 }
 
 export interface DashboardKpis {
+  districts: number;
+  blocks: number;
   tlcGroupsFormed: number;
   teacherLeaders: number;
   tlcMembers: number;

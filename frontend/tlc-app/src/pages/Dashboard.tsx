@@ -32,6 +32,8 @@ import {
   EventBusy as EventBusyIcon,
   CoPresent as CoPresentIcon,
   CalendarMonth as CalendarMonthIcon,
+  LocationCity as LocationCityIcon,
+  AccountTree as AccountTreeIcon,
 } from "@mui/icons-material";
 import apiClient from "../services/apiClient";
 import type {
@@ -449,6 +451,18 @@ export const Dashboard: React.FC = () => {
               value={eventsPlannedThisMonth}
               accent="amber"
               icon={<CalendarMonthIcon />}
+            />
+            <KPICard
+              title="Districts"
+              value={kpis.districts}
+              accent="navy"
+              icon={<LocationCityIcon />}
+            />
+            <KPICard
+              title="Blocks"
+              value={kpis.blocks}
+              accent="navy"
+              icon={<AccountTreeIcon />}
             />
             <KPICard
               title="TLC Groups Formed"
