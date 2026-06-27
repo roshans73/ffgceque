@@ -4,44 +4,86 @@ import {
   Typography,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
+  CircularProgress,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
 import { School as SchoolIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import apiClient from '../services/apiClient';
 import type { User } from '../types';
-import { ROLES, getRoleByName } from '../constants/roles';
 import { NAVY, NAVY_MAIN, AMBER } from '../theme';
 
-const LoginPage: React.FC = () => {
-  const [name, setName]         = useState('');
-  const [email, setEmail]       = useState('');
-  const [roleName, setRoleName] = useState('TechMETeam');
-  const [error, setError]       = useState('');
-  const { login }  = useAuth();
-  const navigate   = useNavigate();
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const handleLogin = () => {
-    if (!name.trim() || !email.trim()) {
-      setError('Name and email are required');
+interface FieldErrors {
+  email?: string;
+  password?: string;
+}
+
+const LoginPage: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const validate = (): boolean => {
+    const errors: FieldErrors = {};
+
+    if (!email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!EMAIL_REGEX.test(email.trim())) {
+      errors.email = 'Enter a valid email address';
+    }
+
+    if (!password.trim()) {
+      errors.password = 'Password is required';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleLogin = async () => {
+    setError('');
+
+    if (!validate()) {
       return;
     }
-    const role = getRoleByName(roleName)!;
-    const mockUser: User = {
-      id: 1,
-      email,
-      name,
-      roleId:   role.id,
-      roleName: role.name,
-      isActive: true,
-    };
-    login('dev-mock-token', mockUser);
-    navigate('/dashboard');
+
+    setLoading(true);
+
+    try {
+      const response = await apiClient.login(email.trim(), password);
+      const { token, user } = response.data as { token: string; user: User };
+      login(token, user);
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 401) {
+          setError('No account found with these credentials. Please check your email and password and try again.');
+        } else if (status === 400) {
+          setError((err.response?.data as { message?: string })?.message || 'Email and password are required.');
+        } else {
+          setError('Unable to sign in right now. Please try again later.');
+        }
+      } else {
+        setError('Unable to sign in right now. Please try again later.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
   };
 
   return (
@@ -99,38 +141,49 @@ const LoginPage: React.FC = () => {
         <Box sx={{ width: '100%', maxWidth: 400 }}>
           <Typography variant="h5" sx={{ fontWeight: 800 }}>Sign in</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3, mt: 0.5 }}>
-            Development login — select a role to continue
+            Sign in with your email and password
           </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            <TextField label="Full Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-            <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth />
-
-            <FormControl fullWidth>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={roleName}
-                label="Role"
-                onChange={(e: SelectChangeEvent) => setRoleName(e.target.value)}
-              >
-                {ROLES.map((r) => (
-                  <MenuItem key={r.id} value={r.name}>
-                    {r.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <TextField
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
+              }}
+              onKeyDown={handleKeyDown}
+              error={!!fieldErrors.email}
+              helperText={fieldErrors.email}
+              fullWidth
+              autoFocus
+            />
+            <TextField
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
+              }}
+              onKeyDown={handleKeyDown}
+              error={!!fieldErrors.password}
+              helperText={fieldErrors.password}
+              fullWidth
+            />
 
             <Button
               variant="contained"
               onClick={handleLogin}
               fullWidth
               size="large"
+              disabled={loading}
               sx={{ mt: 1, py: 1.25, fontWeight: 700, borderRadius: 2 }}
             >
-              Sign In
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
             </Button>
           </Box>
         </Box>

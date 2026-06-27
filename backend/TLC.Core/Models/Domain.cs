@@ -139,9 +139,10 @@ public class Role
 public class User
 {
     public int Id { get; set; }
-    public string AzureAadId { get; set; } = string.Empty;
+    public string? AzureAadId { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
     public int RoleId { get; set; }
     public int? DistrictId { get; set; }
     public int? BlockId { get; set; }

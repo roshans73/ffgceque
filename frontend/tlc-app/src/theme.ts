@@ -63,24 +63,32 @@ const theme = createTheme({
     },
 
     MuiButton: {
-      defaultProps: { disableElevation: true },
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          paddingInline: 18,
-          paddingBlock: 8,
-          fontWeight: 600,
+  defaultProps: { disableElevation: true },
+  styleOverrides: {
+    root: {
+      borderRadius: 8,
+      paddingInline: 18,
+      paddingBlock: 8,
+      fontWeight: 600,
+
+      '&.MuiButton-containedPrimary': {
+        boxShadow: '0 1px 2px rgba(15,32,68,0.18)',
+        '&:hover': {
+          backgroundColor: NAVY,
+          boxShadow: '0 4px 12px rgba(15,32,68,0.22)',
         },
-        containedPrimary: {
-          boxShadow: '0 1px 2px rgba(15,32,68,0.18)',
-          '&:hover': { backgroundColor: NAVY, boxShadow: '0 4px 12px rgba(15,32,68,0.22)' },
-        },
-        outlined: {
-          borderColor: BORDER,
-          '&:hover': { borderColor: NAVY_LIGHT, backgroundColor: alpha(NAVY_MAIN, 0.04) },
+      },
+
+      '&.MuiButton-outlined': {
+        borderColor: BORDER,
+        '&:hover': {
+          borderColor: NAVY_LIGHT,
+          backgroundColor: alpha(NAVY_MAIN, 0.04),
         },
       },
     },
+  },
+},
 
     MuiCard: {
       defaultProps: { elevation: 0 },

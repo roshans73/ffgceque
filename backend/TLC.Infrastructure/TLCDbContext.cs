@@ -186,6 +186,7 @@ public class TLCDbContext : DbContext
         modelBuilder.Entity<TLCAndMasterclass>().HasIndex(tm => tm.Code).IsUnique();
         modelBuilder.Entity<Teacher>().HasIndex(t => new { t.DistrictId, t.BlockId, t.Name });
         modelBuilder.Entity<Coach>().HasIndex(c => c.EmpNo).IsUnique();
+        modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<User>().HasIndex(u => u.AzureAadId).IsUnique();
     }
 }

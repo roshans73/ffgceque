@@ -220,8 +220,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           active={isActive('/masters')}
           onNavigate={go}
           items={[
-            { label: 'Coaches',    path: '/masters/coaches'   },
-            { label: 'Teachers',   path: '/masters/teachers'  },
+            { label: 'Districts & Blocks', path: '/masters/districts-blocks' },
+            { label: 'Coaches',    path: '/masters/coaches' },
+            { label: 'Teachers',   path: '/masters/teachers' },
             { label: 'TLC Groups', path: '/masters/tlcgroups' },
           ]}
         />
@@ -248,8 +249,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         active={isActive('/reports')}
         onNavigate={go}
         items={[
-          { label: 'Year-End Summary',      path: '/reports/yearend'      },
-          { label: 'Longitudinal Analysis', path: '/reports/longitudinal' },
+          { label: 'Year-End Summary',            path: '/reports/yearend' },
+          { label: 'Longitudinal Analysis',       path: '/reports/longitudinal' },
+          { label: 'Teacher Leader Formation',    path: '/reports/teacherleader-formation' },
         ]}
       />
 
@@ -407,21 +409,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </ListItemButton>
         <Collapse in={!!mobileMenus['reports']} timeout="auto" unmountOnExit>
           <List disablePadding>
-            {[
-              { label: 'Year-End Summary',      path: '/reports/yearend'      },
-              { label: 'Longitudinal Analysis', path: '/reports/longitudinal' },
-            ].map((item) => (
-              <ListItemButton
-                key={item.path}
-                sx={{ pl: 5.5, py: 0.6 }}
-                onClick={() => go(item.path)}
-              >
-                <ListItemText
-                  primary={item.label}
-                  slotProps={{ primary: { sx: { fontSize: '0.8rem', color: 'text.secondary' } } }}
-                />
-              </ListItemButton>
-            ))}
+            <ListItemButton sx={{ pl: 4 }} onClick={() => go('/reports/yearend')}>
+              <ListItemText primary="Year-End Summary" />
+            </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }} onClick={() => go('/reports/longitudinal')}>
+              <ListItemText primary="Longitudinal Analysis" />
+            </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }} onClick={() => go('/reports/teacherleader-formation')}>
+              <ListItemText primary="Teacher Leader Formation" />
+            </ListItemButton>
           </List>
         </Collapse>
 

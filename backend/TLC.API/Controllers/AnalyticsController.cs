@@ -1,6 +1,8 @@
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TLC.API.DTOs;
+using TLC.Core.Models;
 using TLC.Core.Services;
 
 namespace TLC.API.Controllers;
@@ -20,40 +22,219 @@ public class AnalyticsController : ControllerBase
     }
 
     [HttpGet("dashboard")]
-    public async Task<ActionResult<DashboardKpiDto>> GetDashboardKpis(int? districtId = null, int? blockId = null)
+    public async Task<ActionResult<DashboardKpiDto>> GetDashboardKpis(
+        int? districtId = null,
+        int? blockId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
     {
         try
         {
-            var tlcGroups = await _unitOfWork.TLCGroups.GetAll();
-            var teachers = await _unitOfWork.Teachers.GetAll();
-            var tlcMembers = await _unitOfWork.TLCMembers.GetAll();
-            var tlcAndMasterclasses = await _unitOfWork.TLCAndMasterclasses.GetAll();
+            if (startDate.HasValue && endDate.HasValue && endDate.Value.Date < startDate.Value.Date)
+                return BadRequest(new { message = "End date must be on or after start date" });
 
-            // Apply filters
-            if (districtId.HasValue)
+            var districts = (await _unitOfWork.Districts.GetAll()).ToList();
+            var blocks = (await _unitOfWork.Blocks.GetAll()).ToList();
+            var tlcGroups = (await _unitOfWork.TLCGroups.GetAll()).ToList();
+            var teachers = (await _unitOfWork.Teachers.GetAll()).ToList();
+            var tlcMembers = (await _unitOfWork.TLCMembers.GetAll()).ToList();
+            var tlcAndMasterclasses = (await _unitOfWork.TLCAndMasterclasses.GetAll()).ToList();
+            var attendances = (await _unitOfWork.TLCAttendances.GetAll()).ToList();
+
+            var rangeStart = startDate?.Date;
+            var rangeEnd = endDate?.Date;
+            var groupsById = tlcGroups.ToDictionary(g => g.Id);
+            var teachersById = teachers.ToDictionary(t => t.Id);
+            var attendancesByEvent = attendances
+                .GroupBy(a => a.TlcOrMasterclassId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+            var districtsInScope = districts
+                .Where(d => !districtId.HasValue || d.Id == districtId.Value)
+                .ToList();
+            var blocksInScope = blocks
+                .Where(b => (!districtId.HasValue || b.DistrictId == districtId.Value) &&
+                            (!blockId.HasValue || b.Id == blockId.Value))
+                .ToList();
+
+            bool IsInDateRange(DateTime? date)
             {
-                tlcGroups = tlcGroups.Where(g => g.DistrictId == districtId);
-                tlcAndMasterclasses = tlcAndMasterclasses.Where(t => t.DistrictId == districtId || t.Type == "Masterclass");
+                if (!rangeStart.HasValue && !rangeEnd.HasValue)
+                    return true;
+
+                if (!date.HasValue)
+                    return false;
+
+                var value = date.Value.Date;
+                return (!rangeStart.HasValue || value >= rangeStart.Value) &&
+                       (!rangeEnd.HasValue || value <= rangeEnd.Value);
             }
 
-            if (blockId.HasValue)
+            bool TeacherMatchesLocation(Teacher teacher)
             {
-                tlcGroups = tlcGroups.Where(g => g.BlockId == blockId);
-                tlcAndMasterclasses = tlcAndMasterclasses.Where(t => t.BlockId == blockId || t.Type == "Masterclass");
+                return (!districtId.HasValue || teacher.DistrictId == districtId.Value) &&
+                       (!blockId.HasValue || teacher.BlockId == blockId.Value);
             }
 
-            var groupIds = tlcGroups.Select(g => g.Id).ToList();
-            var groupMembers = tlcMembers.Where(m => groupIds.Contains(m.TlcGroupId));
+            bool GroupMatchesLocation(TLCGroup group)
+            {
+                return (!districtId.HasValue || group.DistrictId == districtId.Value) &&
+                       (!blockId.HasValue || group.BlockId == blockId.Value);
+            }
+
+            bool EventHasAttendanceInLocation(TLCAndMasterclass record)
+            {
+                if (!attendancesByEvent.TryGetValue(record.Id, out var eventAttendances))
+                    return false;
+
+                return eventAttendances.Any(a =>
+                    teachersById.TryGetValue(a.TeacherId, out var teacher) &&
+                    TeacherMatchesLocation(teacher));
+            }
+
+            bool EventMatchesLocation(TLCAndMasterclass record)
+            {
+                if (!districtId.HasValue && !blockId.HasValue)
+                    return true;
+
+                int? eventDistrictId = record.DistrictId;
+                int? eventBlockId = record.BlockId;
+
+                if (record.TlcGroupId.HasValue &&
+                    groupsById.TryGetValue(record.TlcGroupId.Value, out var group))
+                {
+                    eventDistrictId ??= group.DistrictId;
+                    eventBlockId ??= group.BlockId;
+                }
+
+                var eventLocationMatches =
+                    (!districtId.HasValue || eventDistrictId == districtId.Value) &&
+                    (!blockId.HasValue || eventBlockId == blockId.Value);
+
+                if (record.Type == "Masterclass")
+                    return eventLocationMatches || EventHasAttendanceInLocation(record);
+
+                return eventLocationMatches;
+            }
+
+            var groupsInLocation = tlcGroups
+                .Where(GroupMatchesLocation)
+                .ToList();
+            var groupIdsInLocation = groupsInLocation
+                .Select(g => g.Id)
+                .ToHashSet();
+            var groupsInSelectedRange = groupsInLocation
+                .Where(g => IsInDateRange(g.DateFormed))
+                .ToList();
+
+            var membersInLocation = tlcMembers
+                .Where(m => groupIdsInLocation.Contains(m.TlcGroupId))
+                .ToList();
+            var membersInSelectedRange = membersInLocation
+                .Where(m => IsInDateRange(m.MembershipDate))
+                .ToList();
+            var memberTeacherIds = membersInSelectedRange
+                .Select(m => m.TeacherId)
+                .Distinct()
+                .ToList();
+
+            var filteredEvents = tlcAndMasterclasses
+                .Where(t => IsInDateRange(t.DateConducted) && EventMatchesLocation(t))
+                .ToList();
+            var filteredTlcEvents = filteredEvents
+                .Where(t => t.Type == "TLC")
+                .ToList();
+            var conductedTlcEvents = filteredTlcEvents
+                .Where(t => t.Status == "Conducted")
+                .ToList();
+            var conductedTlcEventIds = conductedTlcEvents
+                .Select(t => t.Id)
+                .ToHashSet();
+            var conductedMasterclassEvents = filteredEvents
+                .Where(t => t.Type == "Masterclass" && t.Status == "Conducted")
+                .ToList();
+            var conductedMasterclassEventIds = conductedMasterclassEvents
+                .Select(t => t.Id)
+                .ToHashSet();
+
+            var tlcAttendances = attendances
+                .Where(a => conductedTlcEventIds.Contains(a.TlcOrMasterclassId))
+                .Where(a => teachersById.TryGetValue(a.TeacherId, out var teacher) && TeacherMatchesLocation(teacher))
+                .ToList();
+            var tlcAttendanceCountsByTeacher = tlcAttendances
+                .GroupBy(a => a.TeacherId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(a => a.TlcOrMasterclassId).Distinct().Count());
+            var teachersAttendedAtLeastOneTlc = tlcAttendanceCountsByTeacher
+                .Select(kvp => kvp.Key)
+                .ToHashSet();
+
+            var masterclassAttendances = attendances
+                .Where(a => conductedMasterclassEventIds.Contains(a.TlcOrMasterclassId))
+                .Where(a => teachersById.TryGetValue(a.TeacherId, out var teacher) && TeacherMatchesLocation(teacher))
+                .ToList();
+
+            var teachersWithMinimum3 = memberTeacherIds
+                .Count(id => tlcAttendanceCountsByTeacher.TryGetValue(id, out var count) && count >= 3);
+            var requiredTlcCountFor60Percent = conductedTlcEventIds.Count > 0
+                ? (int)Math.Ceiling(conductedTlcEventIds.Count * 0.6)
+                : 0;
+            var uniqueTeachers60PercentOrMore = requiredTlcCountFor60Percent > 0
+                ? memberTeacherIds.Count(id =>
+                    tlcAttendanceCountsByTeacher.TryGetValue(id, out var count) &&
+                    count >= requiredTlcCountFor60Percent)
+                : 0;
+
+            var attendanceReport = memberTeacherIds
+                .Select(id =>
+                {
+                    teachersById.TryGetValue(id, out var teacher);
+                    var tlcsAttended = tlcAttendanceCountsByTeacher.TryGetValue(id, out var count) ? count : 0;
+
+                    return new AttendanceReportEntryDto
+                    {
+                        TeacherId = id,
+                        TeacherName = teacher?.Name ?? string.Empty,
+                        School = teacher?.School ?? string.Empty,
+                        TlcsAttended = tlcsAttended,
+                        PercentOfTotal = conductedTlcEventIds.Count > 0
+                            ? tlcsAttended * 100.0 / conductedTlcEventIds.Count
+                            : 0
+                    };
+                })
+                .OrderByDescending(r => r.TlcsAttended)
+                .ThenBy(r => r.TeacherName)
+                .ToList();
 
             var kpis = new DashboardKpiDto
             {
-                TlcGroupsFormed = tlcGroups.Count(),
-                TeacherLeaders = tlcGroups.Count(),
-                TlcMembers = groupMembers.Count(),
-                TlcMeetsPlanned = tlcAndMasterclasses.Count(t => t.Type == "TLC" && t.Status == "Planned"),
-                TlcMeetsConducted = tlcAndMasterclasses.Count(t => t.Type == "TLC" && t.Status == "Conducted"),
-                TlcsCancelled = tlcAndMasterclasses.Count(t => t.Type == "TLC" && t.Status == "Cancelled"),
-                MasterclassesHeld = tlcAndMasterclasses.Count(t => t.Type == "Masterclass" && t.Status == "Conducted")
+                Districts = districtsInScope.Count,
+                Blocks = blocksInScope.Count,
+                TlcGroupsFormed = groupsInSelectedRange.Count,
+                TeacherLeaders = groupsInSelectedRange
+                    .Select(g => g.TeacherLeaderId)
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .Count(),
+                TlcMembers = membersInSelectedRange.Count,
+                TlcMeetsPlanned = filteredTlcEvents.Count(t => t.Status == "Planned"),
+                TlcMeetsConducted = conductedTlcEvents.Count,
+                TlcsCancelled = filteredTlcEvents.Count(t => t.Status == "Cancelled"),
+                MasterclassesHeld = conductedMasterclassEvents.Count,
+                TipTeachersAttendedAtLeastOne = teachersAttendedAtLeastOneTlc.Count(id =>
+                    teachersById.TryGetValue(id, out var teacher) && teacher.IsTipTeacher),
+                NonTipTeachersAttendedAtLeastOne = teachersAttendedAtLeastOneTlc.Count(id =>
+                    teachersById.TryGetValue(id, out var teacher) && !teacher.IsTipTeacher),
+                TlcMeetsHeld = conductedTlcEvents.Count,
+                PercentTeachersMin3 = memberTeacherIds.Count > 0
+                    ? teachersWithMinimum3 * 100.0 / memberTeacherIds.Count
+                    : 0,
+                UniqueTeachers60PercentOrMore = uniqueTeachers60PercentOrMore,
+                AvgTeachersPerMasterclass = conductedMasterclassEvents.Count > 0
+                    ? conductedMasterclassEvents.Average(masterclass =>
+                        masterclassAttendances.Count(a => a.TlcOrMasterclassId == masterclass.Id))
+                    : 0,
+                AttendanceReport = attendanceReport
             };
 
             return Ok(kpis);
@@ -190,7 +371,7 @@ public class AnalyticsController : ControllerBase
 
             var yearlyMetrics = tlcAndMasterclasses
                 .Where(t => t.DateConducted.HasValue)
-                .GroupBy(t => t.DateConducted.Value.Year)
+                .GroupBy(t => t.DateConducted.GetValueOrDefault().Year)
                 .OrderBy(g => g.Key)
                 .Select(group => new
                 {
@@ -214,6 +395,78 @@ public class AnalyticsController : ControllerBase
         {
             _logger.LogError(ex, "Error getting longitudinal analysis");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving analysis data" });
+        }
+    }
+
+    [HttpGet("teacherleader-formation")]
+    public async Task<ActionResult> GetTeacherLeaderFormationReport(int? districtId = null, int? blockId = null, string? format = null)
+    {
+        try
+        {
+            var teacherLeaders = (await _unitOfWork.TeacherLeaders.GetAll()).ToList();
+            var tlcGroups = (await _unitOfWork.TLCGroups.GetAll()).ToList();
+            var teachers = (await _unitOfWork.Teachers.GetAll()).ToList();
+            var districts = (await _unitOfWork.Districts.GetAll()).ToList();
+            var blocks = (await _unitOfWork.Blocks.GetAll()).ToList();
+
+            if (districtId.HasValue)
+            {
+                tlcGroups = tlcGroups.Where(g => g.DistrictId == districtId).ToList();
+            }
+
+            if (blockId.HasValue)
+            {
+                tlcGroups = tlcGroups.Where(g => g.BlockId == blockId).ToList();
+            }
+
+            var groupIds = tlcGroups.Select(g => g.Id).ToHashSet();
+            var reportRows = teacherLeaders
+                .Where(tl => groupIds.Contains(tl.TlcGroupId))
+                .Select(tl =>
+                {
+                    var group = tlcGroups.FirstOrDefault(g => g.Id == tl.TlcGroupId);
+                    var teacher = teachers.FirstOrDefault(t => t.Id == tl.TeacherId);
+                    var district = districts.FirstOrDefault(d => d.Id == group?.DistrictId);
+                    var block = blocks.FirstOrDefault(b => b.Id == group?.BlockId);
+                    return new
+                    {
+                        TeacherLeaderId = tl.Id,
+                        TeacherId = tl.TeacherId,
+                        TeacherName = teacher?.Name ?? string.Empty,
+                        School = teacher?.School ?? string.Empty,
+                        TlcGroupId = tl.TlcGroupId,
+                        TlcGroupCode = group?.TlcGroupCode ?? string.Empty,
+                        DateFormed = group?.DateFormed.ToString("yyyy-MM-dd") ?? string.Empty,
+                        District = district?.Name ?? string.Empty,
+                        Block = block?.Name ?? string.Empty,
+                        TeacherLeaderCreatedAt = tl.CreatedAt.ToString("yyyy-MM-dd")
+                    };
+                })
+                .OrderBy(r => r.DateFormed)
+                .ThenBy(r => r.TeacherLeaderId)
+                .ToList();
+
+            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                var builder = new StringBuilder();
+                builder.AppendLine("TeacherLeaderId,TeacherId,TeacherName,School,TlcGroupId,TlcGroupCode,DateFormed,District,Block,TeacherLeaderCreatedAt");
+
+                foreach (var row in reportRows)
+                {
+                    string Escape(string value) => value?.Replace("\"", "\"\"") ?? string.Empty;
+                    builder.AppendLine($"{row.TeacherLeaderId},{row.TeacherId},\"{Escape(row.TeacherName)}\",\"{Escape(row.School)}\",{row.TlcGroupId},\"{Escape(row.TlcGroupCode)}\",{row.DateFormed},\"{Escape(row.District)}\",\"{Escape(row.Block)}\",{row.TeacherLeaderCreatedAt}");
+                }
+
+                var csvBytes = Encoding.UTF8.GetBytes(builder.ToString());
+                return File(csvBytes, "text/csv; charset=utf-8", "teacher-leader-formation.csv");
+            }
+
+            return Ok(reportRows);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting teacher leader formation report");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the teacher leader formation report" });
         }
     }
 }

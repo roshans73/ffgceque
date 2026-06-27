@@ -66,50 +66,60 @@ public class TLCAndMasterclassController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "TLCManager,SustainabilityLead,TechMETeam")]
-    public async Task<ActionResult<TLCAndMasterclassDto>> Create(CreateTLCAndMasterclassDto dto)
+    public async Task<IActionResult> Create(IEnumerable<CreateTLCAndMasterclassDto> dtos)
     {
-        string code;
-        if (dto.Type == "Masterclass")
+        var dtoList = dtos.ToList();
+        var records = new List<TLCAndMasterclass>();
+
+        foreach (var dto in dtoList)
         {
-            code = await _codeGenerator.GenerateMasterclassCodeAsync();
-        }
-        else if (dto.Type == "TLC" && dto.TlcGroupId.HasValue)
-        {
-            var group = await _unitOfWork.TLCGroups.GetById(dto.TlcGroupId.Value);
-            if (group == null)
-                return BadRequest("TLC Group not found");
-            // TLC records use the group's code as reference; generate a sequential code
-            var existingCount = (await _unitOfWork.TLCAndMasterclasses.GetAll())
-                .Count(r => r.TlcGroupId == dto.TlcGroupId && r.Type == "TLC");
-            code = $"{group.TlcGroupCode}/{existingCount + 1:00}";
-        }
-        else
-        {
-            return BadRequest("Type must be 'TLC' (with TlcGroupId) or 'Masterclass'");
+            string code;
+            if (dto.Type == "Masterclass")
+            {
+                code = await _codeGenerator.GenerateMasterclassCodeAsync();
+            }
+            else if (dto.Type == "TLC" && dto.TlcGroupId.HasValue)
+            {
+                var group = await _unitOfWork.TLCGroups.GetById(dto.TlcGroupId.Value);
+                if (group == null)
+                    return BadRequest("TLC Group not found");
+                var existingCount = (await _unitOfWork.TLCAndMasterclasses.GetAll())
+                    .Count(r => r.TlcGroupId == dto.TlcGroupId && r.Type == "TLC");
+                code = $"{group.TlcGroupCode}/{existingCount + 1:00}";
+            }
+            else
+            {
+                return BadRequest("Type must be 'TLC' (with TlcGroupId) or 'Masterclass'");
+            }
+
+            var record = new TLCAndMasterclass
+            {
+                Code = code,
+                Type = dto.Type,
+                TlcGroupId = dto.TlcGroupId,
+                DistrictId = dto.DistrictId,
+                BlockId = dto.BlockId,
+                Status = dto.Status,
+                DateConducted = dto.DateConducted,
+                LocationConducted = dto.LocationConducted,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                LedBy = dto.LedBy,
+                Topic = dto.Topic,
+                Remarks = dto.Remarks,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.TLCAndMasterclasses.Add(record);
+            records.Add(record);
         }
 
-        var record = new TLCAndMasterclass
-        {
-            Code = code,
-            Type = dto.Type,
-            TlcGroupId = dto.TlcGroupId,
-            DistrictId = dto.DistrictId,
-            BlockId = dto.BlockId,
-            Status = dto.Status,
-            DateConducted = dto.DateConducted,
-            LocationConducted = dto.LocationConducted,
-            StartTime = dto.StartTime,
-            EndTime = dto.EndTime,
-            LedBy = dto.LedBy,
-            Topic = dto.Topic,
-            Remarks = dto.Remarks,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _unitOfWork.TLCAndMasterclasses.Add(record);
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = record.Id }, MapToDto(record));
+        if (dtoList.Count == 1)
+            return CreatedAtAction(nameof(GetById), new { id = records[0].Id }, MapToDto(records[0]));
+
+        return Ok(records.Select(MapToDto));
     }
 
     [HttpPut("{id}")]
