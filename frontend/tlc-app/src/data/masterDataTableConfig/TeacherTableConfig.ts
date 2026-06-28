@@ -174,7 +174,7 @@ export const teachersTableConfig: MasterDataPageConfig<Teacher> = {
   },
 
   api: {
-    list: () => apiClient.getTeachers(),
+    list: (signal) => apiClient.getTeachers(signal),
     create: (payload) => apiClient.createTeacher(payload as any),
     upload: (file) => apiClient.uploadTeachers(file),
   },

@@ -64,7 +64,7 @@ export interface MasterDataPageConfig<T extends { id: number } = any> {
     validateForm?: (form: Record<string, any>) => string | null;
   };
   api: {
-    list: () => Promise<{ data: T[] }>;
+    list: (signal?: AbortSignal) => Promise<{ data: T[] }>;
     create: (payload: Record<string, any>) => Promise<any>;
     upload?: (file: File) => Promise<any>;
   };

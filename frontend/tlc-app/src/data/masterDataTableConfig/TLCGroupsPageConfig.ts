@@ -109,7 +109,7 @@ export const tlcGroupsTableConfig: MasterDataPageConfig<TLCGroup> = {
   },
 
   api: {
-    list: () => apiClient.getTLCGroups(),
+    list: (signal) => apiClient.getTLCGroups(signal),
     create: (payload) => apiClient.createTLCGroup(payload as any),
     upload: (file) => apiClient.uploadTLCGroups(file),
   },

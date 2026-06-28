@@ -20,7 +20,6 @@ class ApiClient {
       },
     });
 
-    // Add token to requests if available
     this.instance.interceptors.request.use((config) => {
       const token = localStorage.getItem('accessToken');
       if (token) {
@@ -29,7 +28,6 @@ class ApiClient {
       return config;
     });
 
-    // Handle response errors
     this.instance.interceptors.response.use(
       (response) => response,
       (error: AxiosError<ApiError>) => {
@@ -44,26 +42,29 @@ class ApiClient {
   }
 
   // Master Data APIs
-  getDistricts = (signal: AbortSignal | undefined) => this.instance.get('/districts');
+  getDistricts = (signal?: AbortSignal) =>
+    this.instance.get('/districts', { signal });
   getDistrictById = (id: number) => this.instance.get(`/districts/${id}`);
   createDistrict = (data: unknown) => this.instance.post('/districts', [data]);
   updateDistrict = (id: number, data: unknown) => this.instance.put(`/districts/${id}`, data);
   deleteDistrict = (id: number) => this.instance.delete(`/districts/${id}`);
 
-  getBlocks = (districtId?: number, signal?: AbortSignal | undefined) =>
-    this.instance.get('/blocks', { params: { districtId } });
+  getBlocks = (districtId?: number, signal?: AbortSignal) =>
+    this.instance.get('/blocks', { params: { districtId }, signal });
   createBlock = (data: unknown) => this.instance.post('/blocks', [data]);
 
-  getCoaches = (districtId?: number, blockId?: number, signal?: AbortSignal | undefined) =>
-    this.instance.get('/coaches', { params: { districtId, blockId } });
+  getCoaches = (districtId?: number, blockId?: number, signal?: AbortSignal) =>
+    this.instance.get('/coaches', { params: { districtId, blockId }, signal });
   createCoach = (data: unknown) => this.instance.post('/coaches', [data]);
 
-  getTeachers = (signal: AbortSignal | undefined) => this.instance.get('/teachers');
+  getTeachers = (signal?: AbortSignal) =>
+    this.instance.get('/teachers', { signal });
   getTeachersByGroup = (groupId: number) =>
     this.instance.get(`/teachers?groupId=${groupId}`);
   createTeacher = (data: unknown) => this.instance.post('/teachers', [data]);
 
-  getTLCGroups = (signal: AbortSignal | undefined) => this.instance.get('/tlcgroups');
+  getTLCGroups = (signal?: AbortSignal) =>
+    this.instance.get('/tlcgroups', { signal });
   getTLCGroupById = (id: number) => this.instance.get(`/tlcgroups/${id}`);
   createTLCGroup = (data: unknown) => this.instance.post('/tlcgroups', [data]);
 
@@ -138,7 +139,7 @@ class ApiClient {
   // Analytics APIs
   getDashboardKpis = (districtId?: number, blockId?: number, startDate?: string, endDate?: string) =>
     this.instance.get('/analytics/dashboard', {
-      params: { districtId, blockId, startDate, endDate }
+      params: { districtId, blockId, startDate, endDate },
     });
 
   getYearEndSummary = (districtId?: number, blockId?: number, year?: number, signal?: AbortSignal) =>
