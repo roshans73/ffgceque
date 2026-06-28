@@ -147,14 +147,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const go = (path: string) => {
-    // Close drawer first, then navigate on next tick.
-    // This prevents the drawer's closing animation from shifting
-    // focus onto whatever button renders first in the new page
-    // (which was causing "Add Coach" to be auto-clicked via focus+Enter).
     setMobileOpen(false);
     setTimeout(() => {
-    // Blur whatever is focused now (drawer list item) before navigating
-    // so the browser has no "last focused" element to restore focus to.
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -288,6 +282,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         sx={{
           px: 2,
           py: 1.5,
+          pb: 3.5,
           bgcolor: BRAND_BG,
           display: 'flex',
           alignItems: 'center',
@@ -341,6 +336,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   { label: 'Coaches',    path: '/masters/coaches'   },
                   { label: 'Teachers',   path: '/masters/teachers'  },
                   { label: 'TLC Groups', path: '/masters/tlcgroups' },
+                  { label: 'Districts & Blocks', path: '/masters/districts-blocks' }
                 ].map((item) => (
                   <ListItemButton
                     key={item.path}
@@ -563,7 +559,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         variant="temporary"
         open={mobileOpen}
         onClose={handleDrawerClose}
-        ModalProps={{ keepMounted: false }}
+        ModalProps={{ keepMounted: false ,disableRestoreFocus: true,  }}
         sx={{
           zIndex: (t) => t.zIndex.appBar - 1,
           '& .MuiDrawer-paper': { width: DRAWER_W, boxSizing: 'border-box' },

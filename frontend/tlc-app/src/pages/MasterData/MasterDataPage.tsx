@@ -1,62 +1,33 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import {
-  Alert,
-  Box,
-  Button,
-  Checkbox,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  FormControl,
-  FormControlLabel,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
-  TextField,
-  Tooltip,
-  Typography,
+  Alert, Box, Button, Checkbox, CircularProgress, Dialog, DialogActions,
+  DialogContent, DialogTitle, Divider, FormControl, FormControlLabel,
+  IconButton, InputAdornment, InputLabel, MenuItem, Paper, Select, Table,
+  TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow,
+  TextField, Tooltip, Typography,
 } from '@mui/material';
 import { WifiOff as WifiOffIcon, CloudOff as CloudOffIcon } from '@mui/icons-material';
 import type { SelectChangeEvent } from '@mui/material';
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Search as SearchIcon,
-  Upload as UploadIcon,
+  Add as AddIcon, Edit as EditIcon, Search as SearchIcon, Upload as UploadIcon,
 } from '@mui/icons-material';
 import BulkUploadDialog from '../../components/BulkUploadDialog';
 import type {
-  LookupOption,
-  MasterDataPageConfig,
-  MasterFormField,
+  LookupOption, MasterDataPageConfig, MasterFormField,
 } from '../../data/pageConfig/MasterDataPageConfig';
 
 type FormState = Record<string, any>;
 
-// ── EntitySectionConfig ────────────────────────────────────────────────────────
-// A normalised slice of config that EntitySection works with whether it comes
-// from the top-level config or from config.childEntity.
 interface EntitySectionConfig {
   entityLabel: string;
   subtitle: string;
   table: MasterDataPageConfig['table'];
   form: MasterDataPageConfig['form'];
-  api: Pick<MasterDataPageConfig['api'], 'list' | 'create'>;
+  api: {
+    list: (signal?: AbortSignal) => Promise<any>;
+    create: (payload: Record<string, any>) => Promise<any>;
+  };
   bulkUpload?: MasterDataPageConfig['bulkUpload'];
-  // upload is optional — only present when this section has bulk-upload enabled
   upload?: (file: File) => Promise<any>;
 }
 
@@ -64,12 +35,10 @@ interface MasterDataPageProps {
   config: MasterDataPageConfig<any>;
 }
 
-// ── Timeout wrapper ────────────────────────────────────────────────────────────
 function withTimeout<T>(promise: Promise<T>, ms = 10_000): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(
-      () => reject(new DOMException('Request timed out', 'TimeoutError')),
-      ms,
+      () => reject(new DOMException('Request timed out', 'TimeoutError')), ms,
     );
     promise.then(
       (v) => { clearTimeout(timer); resolve(v); },
@@ -78,9 +47,8 @@ function withTimeout<T>(promise: Promise<T>, ms = 10_000): Promise<T> {
   });
 }
 
-// ── Safe fetch helpers ─────────────────────────────────────────────────────────
 async function safeOptionsFetch(
-  fetch: (signal?: AbortSignal) => Promise<{ data: any[] }>,
+  fetch: (signal?: AbortSignal) => Promise<any>,
   map: (item: any) => LookupOption,
   signal?: AbortSignal,
 ): Promise<LookupOption[]> {
@@ -89,44 +57,42 @@ async function safeOptionsFetch(
   try {
     const r = await withTimeout(fetch(signal));
     if (signal?.aborted) return [];
-    return Array.isArray(r?.data) ? r.data.map(map) : [];
+    // ✅ handle both { data: [] } and axios { data: { data: [] } }
+    const arr = Array.isArray(r?.data?.data) ? r.data.data
+              : Array.isArray(r?.data)        ? r.data
+              : [];
+    return arr.map(map);
   } catch {
     return [];
   }
 }
 
-async function safeListFetch<T>(
-  list: () => Promise<{ data: T[] }>,
+async function safeListFetch(
+  list: (signal?: AbortSignal) => Promise<any>,
   signal?: AbortSignal,
-): Promise<{ data: T[]; error: boolean; offline: boolean }> {
+): Promise<{ data: any[]; error: boolean; offline: boolean }> {
   if (!navigator.onLine) return { data: [], error: false, offline: true };
   if (signal?.aborted) return { data: [], error: false, offline: false };
   try {
-    const r = await withTimeout(list());
+    const r = await withTimeout(list(signal));
     if (signal?.aborted) return { data: [], error: false, offline: false };
-    return { data: Array.isArray(r?.data) ? r.data : [], error: false, offline: false };
+    // ✅ handle both { data: [] } and axios { data: { data: [] } }
+    const arr = Array.isArray(r?.data?.data) ? r.data.data
+              : Array.isArray(r?.data)        ? r.data
+              : [];
+    return { data: arr, error: false, offline: false };
   } catch (err) {
-    if (
-      err instanceof DOMException &&
-      (err.name === 'AbortError' || err.name === 'TimeoutError')
-    ) {
+    if (err instanceof DOMException && (err.name === 'AbortError' || err.name === 'TimeoutError')) {
       return { data: [], error: false, offline: false };
     }
     return { data: [], error: true, offline: false };
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// EntitySection — self-contained: owns its own rows, lookups, form, dialog state
-// ═══════════════════════════════════════════════════════════════════════════════
 interface EntitySectionProps {
   section: EntitySectionConfig;
   isOffline: boolean;
-  // Parent passes its own abort ref so unmounting the parent also cancels
-  // all in-flight requests owned by child sections.
   parentMountedRef: React.MutableRefObject<boolean>;
-  // False on single-entity pages — the page h4 title already serves as the
-  // header, so the section must not render a duplicate h5 beneath it.
   showSectionHeader: boolean;
 }
 
@@ -170,29 +136,30 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
     return map;
   }, [section]);
 
-  // ── Load rows ──────────────────────────────────────────────────────────────
+  // ✅ KEY FIX: removed parentMountedRef gate before fetch, always clear loading
   const loadRows = useCallback(async () => {
     listAbortRef.current?.abort();
     const controller = new AbortController();
     listAbortRef.current = controller;
 
-    if (!mountedRef.current || !parentMountedRef.current) return;
     setLoading(true);
     setLoadError(false);
 
     const result = await safeListFetch(section.api.list, controller.signal);
 
-    if (!mountedRef.current || controller.signal.aborted) return;
+    // Only update state if this component is still mounted and this request wasn't superseded
+    if (!mountedRef.current || controller.signal.aborted) {
+      if (mountedRef.current) setLoading(false);
+      return;
+    }
+
     setRows(result.data);
     setLoadError(result.error);
     setLoading(false);
-  }, [section, parentMountedRef]);
+  }, [section]);                  // ← parentMountedRef removed from deps
 
-  // ── Load independent lookups ───────────────────────────────────────────────
   useEffect(() => {
     const loadLookups = async () => {
-      if (!mountedRef.current) return;
-
       lookupAbortRef.current?.abort();
       const controller = new AbortController();
       lookupAbortRef.current = controller;
@@ -206,7 +173,7 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
           if (!src) return;
           if (src.kind === 'static') { next[field.name] = src.options; return; }
           if (src.kind === 'api') {
-            const apiFetch = src.fetch as (signal?: AbortSignal) => Promise<{ data: any[] }>;
+            const apiFetch = src.fetch as (signal?: AbortSignal) => Promise<any>;
             next[field.name] = await safeOptionsFetch(apiFetch, src.map, controller.signal);
           }
         }),
@@ -221,7 +188,6 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
     loadRows();
   }, [section, loadRows]);
 
-  // ── Dependent options ──────────────────────────────────────────────────────
   const loadDependentOptions = async (field: MasterFormField, parentValue: string | number) => {
     const src = field.optionsSource;
     if (!src || src.kind !== 'api-dependent') return;
@@ -240,7 +206,6 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
     return lookups[field.name] ?? [];
   };
 
-  // ── Cell resolution ────────────────────────────────────────────────────────
   const resolveCellValue = (row: any, column: typeof section.table.columns[number]): string => {
     if (column.resolve) return String(column.resolve(row, lookups) ?? '—');
     const raw = row[column.key as string];
@@ -255,7 +220,6 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
     return raw ?? '—';
   };
 
-  // ── Filtering / pagination ─────────────────────────────────────────────────
   const filteredRows = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return rows.filter((row) => {
@@ -286,7 +250,6 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
 
   const filterableColumns = section.table.columns.filter((c) => c.filterable);
 
-  // ── Form helpers ───────────────────────────────────────────────────────────
   const buildForm = (source?: any): FormState => {
     const f: FormState = {};
     section.form.fields.forEach((field) => {
@@ -376,6 +339,10 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
       payload[field.name] = field.toPayload ? field.toPayload(form[field.name]) : form[field.name];
     });
 
+    if (dialogMode === 'edit') {
+      console.log(`[MasterDataPage] Edit payload for ${section.entityLabel} id=${editingRow?.id}:`, payload);
+    }
+
     setSaving(true);
     setFormError('');
     try {
@@ -407,7 +374,6 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
     return Object.values(grouped);
   }, [section]);
 
-  // ── Form field renderer ────────────────────────────────────────────────────
   const renderFormField = (field: MasterFormField) => {
     const value = form[field.name] ?? (field.type === 'checkbox' ? false : '');
 
@@ -416,18 +382,13 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
         <FormControlLabel
           key={field.name}
           control={
-            <Checkbox
-              checked={!!value}
-              onChange={(e) => handleFieldChange(field, e.target.checked)}
-            />
+            <Checkbox checked={!!value} onChange={(e) => handleFieldChange(field, e.target.checked)} />
           }
           label={
             <Box>
               <Typography variant="body2">{field.label}</Typography>
               {field.helperText && (
-                <Typography variant="caption" color="text.secondary">
-                  {field.helperText}
-                </Typography>
+                <Typography variant="caption" color="text.secondary">{field.helperText}</Typography>
               )}
             </Box>
           }
@@ -438,24 +399,12 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
     if (field.type === 'select') {
       const options = optionsFor(field);
       const parentField =
-        field.optionsSource?.kind === 'api-dependent'
-          ? field.optionsSource.dependsOn
-          : undefined;
+        field.optionsSource?.kind === 'api-dependent' ? field.optionsSource.dependsOn : undefined;
       const disabled = !!parentField && !form[parentField];
       return (
-        <FormControl
-          key={field.name}
-          fullWidth
-          required={field.required && !field.optional}
-          disabled={disabled}
-          sx={{ flex: 1 }}
-        >
+        <FormControl key={field.name} fullWidth required={field.required && !field.optional} disabled={disabled} sx={{ flex: 1 }}>
           <InputLabel>{field.label}</InputLabel>
-          <Select
-            value={value}
-            label={field.label}
-            onChange={(e: SelectChangeEvent) => handleFieldChange(field, e.target.value)}
-          >
+          <Select value={value} label={field.label} onChange={(e: SelectChangeEvent) => handleFieldChange(field, e.target.value)}>
             {options.length === 0 && (
               <MenuItem value="" disabled>
                 {isOffline ? 'Unavailable offline' : 'No options available'}
@@ -465,10 +414,7 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
               <MenuItem key={opt.value} value={String(opt.value)}>
                 {opt.label}
                 {opt.caption && (
-                  <Typography
-                    component="span"
-                    sx={{ ml: 1, fontSize: '0.75rem', color: 'text.secondary' }}
-                  >
+                  <Typography component="span" sx={{ ml: 1, fontSize: '0.75rem', color: 'text.secondary' }}>
                     {opt.caption}
                   </Typography>
                 )}
@@ -505,7 +451,6 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
     );
   };
 
-  // ── Table body ─────────────────────────────────────────────────────────────
   const renderTableBody = () => {
     const colSpan = section.table.columns.length + 2;
 
@@ -523,12 +468,8 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
       return (
         <TableRow>
           <TableCell colSpan={colSpan} align="center" sx={{ py: 6 }}>
-            <WifiOffIcon
-              sx={{ fontSize: 36, color: 'text.disabled', display: 'block', mx: 'auto', mb: 1 }}
-            />
-            <Typography color="text.secondary" variant="body2" sx={{ mb: 0.5 }}>
-              You're offline
-            </Typography>
+            <WifiOffIcon sx={{ fontSize: 36, color: 'text.disabled', display: 'block', mx: 'auto', mb: 1 }} />
+            <Typography color="text.secondary" variant="body2" sx={{ mb: 0.5 }}>You're offline</Typography>
             <Typography variant="caption" color="text.disabled">
               Data will load automatically when you reconnect
             </Typography>
@@ -541,15 +482,11 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
       return (
         <TableRow>
           <TableCell colSpan={colSpan} align="center" sx={{ py: 6 }}>
-            <CloudOffIcon
-              sx={{ fontSize: 36, color: 'text.disabled', display: 'block', mx: 'auto', mb: 1 }}
-            />
+            <CloudOffIcon sx={{ fontSize: 36, color: 'text.disabled', display: 'block', mx: 'auto', mb: 1 }} />
             <Typography color="text.secondary" variant="body2" sx={{ mb: 1.5 }}>
               Could not load data. Check your connection and try again.
             </Typography>
-            <Button size="small" variant="outlined" onClick={loadRows}>
-              Retry
-            </Button>
+            <Button size="small" variant="outlined" onClick={loadRows}>Retry</Button>
           </TableCell>
         </TableRow>
       );
@@ -567,10 +504,7 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
 
     return paginatedRows.map((row, idx) => (
       <TableRow key={row.id} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-        <TableCell
-          align="center"
-          sx={{ width: 56, color: 'text.secondary', fontSize: '0.8rem' }}
-        >
+        <TableCell align="center" sx={{ width: 56, color: 'text.secondary', fontSize: '0.8rem' }}>
           {page * rowsPerPage + idx + 1}
         </TableCell>
         {section.table.columns.map((col) => (
@@ -601,53 +535,25 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
 
   return (
     <Box>
-      {/* Section header + action buttons */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-          flexWrap: 'wrap',
-          gap: 2,
-        }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
         {showSectionHeader ? (
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {section.entityLabel}s
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-              {section.subtitle}
-            </Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{section.entityLabel}s</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>{section.subtitle}</Typography>
           </Box>
-        ) : (
-          // Spacer so the action buttons still align to the right
-          <Box />
-        )}
+        ) : <Box />}
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
           {section.bulkUpload?.enabled && section.upload && (
-            <Button
-              variant="outlined"
-              startIcon={<UploadIcon />}
-              onClick={() => setUploadOpen(true)}
-              disabled={isOffline}
-            >
+            <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setUploadOpen(true)} disabled={isOffline}>
               Upload Excel
             </Button>
           )}
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={openAdd}
-            disabled={lookupsLoading || isOffline}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openAdd} disabled={lookupsLoading || isOffline}>
             Add {section.entityLabel}
           </Button>
         </Box>
       </Box>
 
-      {/* Search + column filters */}
       <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           size="small"
@@ -658,9 +564,7 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
           slotProps={{
             input: {
               startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
+                <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>
               ),
             },
           }}
@@ -675,35 +579,21 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
                 : (lookups[fieldName]?.map((o) => ({ label: o.label, value: o.label })) ?? []);
             return (
               <TextField
-                key={fieldName}
-                select
-                size="small"
-                label={col.label}
+                key={fieldName} select size="small" label={col.label}
                 value={columnFilters[fieldName] ?? ''}
-                onChange={(e) =>
-                  setColumnFilters((prev) => ({ ...prev, [fieldName]: e.target.value }))
-                }
+                onChange={(e) => setColumnFilters((prev) => ({ ...prev, [fieldName]: e.target.value }))}
                 sx={{ minWidth: 140 }}
               >
                 <MenuItem value="">All</MenuItem>
-                {options.map((o) => (
-                  <MenuItem key={o.value} value={o.value}>
-                    {o.label}
-                  </MenuItem>
-                ))}
+                {options.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
               </TextField>
             );
           })}
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ ml: 'auto', whiteSpace: 'nowrap' }}
-        >
+        <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto', whiteSpace: 'nowrap' }}>
           {filteredRows.length} of {rows.length} record{rows.length !== 1 ? 's' : ''}
         </Typography>
       </Box>
 
-      {/* Table */}
       <Paper sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <TableContainer>
           <Table>
@@ -711,11 +601,7 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
               <TableRow sx={{ '& th': { fontWeight: 700, bgcolor: 'grey.50' } }}>
                 <TableCell align="center" sx={{ width: 56 }}>#</TableCell>
                 {section.table.columns.map((col) => (
-                  <TableCell
-                    key={col.key as string}
-                    align={col.align || 'left'}
-                    sx={{ width: col.width }}
-                  >
+                  <TableCell key={col.key as string} align={col.align || 'left'} sx={{ width: col.width }}>
                     {col.label}
                   </TableCell>
                 ))}
@@ -734,21 +620,15 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
             rowsPerPageOptions={section.table.rowsPerPageOptions ?? [10, 25, 50, 100]}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
+            onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
           />
         )}
       </Paper>
 
-      {/* Add / Edit dialog */}
       <Dialog open={isOpen} onClose={closeDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            {dialogMode === 'edit'
-              ? `Edit ${section.entityLabel}`
-              : `Add ${section.entityLabel}`}
+            {dialogMode === 'edit' ? `Edit ${section.entityLabel}` : `Add ${section.entityLabel}`}
           </Typography>
         </DialogTitle>
         <Divider />
@@ -769,9 +649,7 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
         </DialogContent>
         <Divider />
         <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-          <Button onClick={closeDialog} disabled={saving}>
-            Cancel
-          </Button>
+          <Button onClick={closeDialog} disabled={saving}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleSave}
@@ -783,7 +661,6 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
         </DialogActions>
       </Dialog>
 
-      {/* Bulk Upload */}
       {section.bulkUpload?.enabled && section.upload && (
         <BulkUploadDialog
           open={uploadOpen}
@@ -798,9 +675,6 @@ function EntitySection({ section, isOffline, parentMountedRef, showSectionHeader
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MasterDataPage — orchestrates one or two EntitySection instances
-// ═══════════════════════════════════════════════════════════════════════════════
 function MasterDataPage({ config }: MasterDataPageProps) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const mountedRef = useRef(true);
@@ -821,7 +695,6 @@ function MasterDataPage({ config }: MasterDataPageProps) {
     };
   }, []);
 
-  // Normalise top-level config into the EntitySectionConfig shape
   const primarySection: EntitySectionConfig = {
     entityLabel: config.entityLabel,
     subtitle:    config.subtitle,
@@ -832,55 +705,28 @@ function MasterDataPage({ config }: MasterDataPageProps) {
     upload:      config.api.upload,
   };
 
-  // childEntity is already in EntitySectionConfig shape by type contract
   const childSection: EntitySectionConfig | null = config.childEntity ?? null;
 
   return (
     <Box>
-      {/* Page-level offline banner */}
       {isOffline && (
-        <Alert
-          severity="warning"
-          icon={<WifiOffIcon fontSize="small" />}
-          sx={{ mb: 3 }}
-        >
+        <Alert severity="warning" icon={<WifiOffIcon fontSize="small" />} sx={{ mb: 3 }}>
           You're offline — data cannot be loaded or saved until you reconnect.
         </Alert>
       )}
-
-      {/* Page title */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          {config.title}
-        </Typography>
-        {/* Only show the page subtitle when there is no child entity.
-            When there IS a child, each EntitySection renders its own subtitle,
-            so the page-level one would be redundant. */}
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>{config.title}</Typography>
         {!childSection && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {config.subtitle}
-          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{config.subtitle}</Typography>
         )}
       </Box>
 
-      {/* Primary entity section — no section header; page h4 already titles it */}
-      <EntitySection
-        section={primarySection}
-        isOffline={isOffline}
-        parentMountedRef={mountedRef}
-        showSectionHeader={false}
-      />
+      <EntitySection section={primarySection} isOffline={isOffline} parentMountedRef={mountedRef} showSectionHeader={false} />
 
-      {/* Child entity section — rendered only when childEntity is defined */}
       {childSection && (
         <>
           <Divider sx={{ my: 4 }} />
-          <EntitySection
-            section={childSection}
-            isOffline={isOffline}
-            parentMountedRef={mountedRef}
-            showSectionHeader={true}
-          />
+          <EntitySection section={childSection} isOffline={isOffline} parentMountedRef={mountedRef} showSectionHeader={true} />
         </>
       )}
     </Box>

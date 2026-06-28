@@ -78,7 +78,7 @@ export const coachesTableConfig: MasterDataPageConfig<Coach> = {
   },
 
   api: {
-    list: () => apiClient.getCoaches(),
+    list: (signal) => apiClient.getCoaches(undefined, undefined, signal),
     create: (payload) => apiClient.createCoach(payload as any),
     upload: (file) => apiClient.uploadCoaches(file),
   },

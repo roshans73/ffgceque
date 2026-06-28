@@ -99,7 +99,7 @@ export const districtsBlocksTableConfig: MasterDataPageConfig<District> = {
   },
 
   api: {
-    list: () => apiClient.getDistricts(),
+    list: (signal) => apiClient.getDistricts(signal),
     create: (payload) => {
       const code = (payload.code as string).toUpperCase();
       return apiClient.createDistrict({
@@ -191,7 +191,7 @@ export const districtsBlocksTableConfig: MasterDataPageConfig<District> = {
     },
 
     api: {
-      list: () => apiClient.getBlocks(),
+      list: (signal) => apiClient.getBlocks(undefined, signal),
       create: (payload) =>
         apiClient.createBlock({
           districtId: Number(payload.districtId),
